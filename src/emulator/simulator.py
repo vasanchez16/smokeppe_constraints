@@ -8,11 +8,50 @@ Instances of this class represent the simulator or just the data we take for
 example from it.
 """
 
+import scipy.stats
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern
+
+
+def sample(N: int, params: dict, random_state: int=1):
+    X = Px(params).rvs(N, random_state)
+    eps = Pyx(np.inner(X, params['beta']), params).rvs(N, random_state)
+    return X, X + eps
+
+
+class Px:
+    def __init__(self, params):
+        self.params = params
+        self._dist = scipy.stats.norm(params['mu'], params['sigma'])
+    def rvs(self, N, random_state):
+        return self._dist.rvs(N, random_state=random_state)
+    def pdf(self, x):
+        return self._dist.pdf(x)
+    def logpdf(self, x):
+        return self._dist.logpdf(x)
+
+
+class Pyx:
+    """
+    The probability density above is defined in the “standardized” form. To shift
+    and/or scale the distribution use the loc and scale parameters. Specifically,
+    t.pdf(x, df, loc, scale) is identically equivalent to t.pdf(y, df) / scale
+    with y = (x - loc) / scale. Note that shifting the location of a distribution
+    does not make it a “noncentral” distribution; noncentral generalizations of
+    some distributions are available in separate classes.
+    """
+    def __init__(self, x, params):
+        self.params = params
+        self._dist = scipy.stats.t(params['nu'], np.inner(x, params['beta']), params['delta']**2)
+    def rvs(self, N, random_state):
+        return self._dist.rvs(N, random_state=random_state)
+    def pdf(self, y):
+        return self._dist.pdf(y)
+    def logpdf(self, y):
+        return self._dist.logpdf(y)
 
 
 class SimulatedDataset:

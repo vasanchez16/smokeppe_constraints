@@ -9,5 +9,9 @@ __all__ = [
     'Emulator',
     'get_implausibility_from_least_squares_variant',
     'Observer',
-    'SimulatedDataset'
+    'SimulatedDataset',
+    'emulator',
+    'get_implausibility_from_least_squares_variant',
+    'observer',
+    'simulator'
 ]

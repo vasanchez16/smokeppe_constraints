@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+from numpy.polynomial.polynomial import Polynomial
 import matplotlib.pyplot as plt
+import math
 import scipy
 from scipy.special import gamma
 import scipy.stats
@@ -15,178 +17,112 @@ import time
 sys.path.append(os.getcwd())
 
 
-def get_implausibility_from_least_squares_variant(obsSdCensor=1):
-    """
-    Value
-    
-    Tuple : Variant which achieves least squares between measured and emulated AOD, "Distances" (differences in response)
-        and "variances" (terms needed to normalize the distances)
-    """
-    which_gets_least_squares = []
-    distances = []
-    variances = []
+class Likelihood:
+    def __init__(self, P_x, P_y_x):
+        self.params = P_x.params
+        self.P_x = P_x
+        self.P_y_x = P_y_x
 
-    my_obs_df = obs_df.copy()
-    my_obs_df.loc[obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
 
-    # Get a best-variant for each day + time of day
-    for time, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
+    def q_pdf(self, y, x):
+        y_hat = self.y_hat(y, x)
+        C = np.sqrt(-2*math.pi/self.psi_dot_dot(y_hat, x))
+        return C*np.exp(self.psi(y_hat, x))
 
-        my_obs_df_this_time = my_obs_df[my_obs_df.time==time].reset_index(drop=True)
-        num_pixels = len(my_obs_df_this_time.index)
 
-        with open(prediction_set, "r") as f:
-            my_predict_df_this_time = pd.read_csv(
-                f, index_col=0
-            ).sort_values(
-                ['time', 'longitude', 'latitude', 'variant']
-            ).reset_index(
-                drop=True
-            )
+    def y_hat(self, y, x):
+        roots, psi_roots = None, None
+        roots = list(np.real(self.c_psi_dot(y, x).roots()))
+        psi_roots = [self.psi(root, x) for root in roots]
+        return roots[min([2, np.argmax(psi_roots)])]
 
-        my_predict_dfs = [
-            my_predict_df_this_time.iloc[k*5000:(k+1)*5000, :].reset_index(drop=True) 
-            for k in range(num_pixels)
+
+    def psi(self, y, x):
+        return self.P_x.logpdf(x) + self.P_y_x.logpdf(y)
+
+
+    def c_psi_dot(self, y, x):
+        mu, sigma = self.params['mu'], self.params['sigma']
+        delta, nu = self.params['delta'], self.params['nu']
+        coeffs = [
+            -mu*(y**2 + delta**2*nu) - y*(nu+1)*sigma**2,
+            2*y*mu + y**2 + delta**2*nu + (nu+1)*sigma**2,
+            -2*y - mu,
+            1
         ]
-
-        # Check which row (test variant) gives least squares
-        for row in range(num_pixels):
-
-            y = my_obs_df_this_time.loc[row, 'meanResponse']
-            e = my_obs_df_this_time.loc[row, 'sdResponse']**2
-
-            zs = my_predict_dfs[row]['mean']
-            ss = my_predict_dfs[row]['std']**2
-
-            if ~np.isnan(y) and ~np.isnan(e) and y != 0 and e != 0:
-                squares = list((y - zs)**2 / (e + ss))
-                least_squares = min(squares)
-                idx = squares.index(least_squares)
-
-                which_gets_least_squares.append(idx)
-                distances.append(y-zs[idx])
-                variances.append(e + ss[idx])
-            else:
-                which_gets_least_squares.append(0)
-                distances.append(float("nan"))
-                variances.append(float("nan"))
-
-    return (which_gets_least_squares, distances, variances)
+        return Polynomial(coeffs)
 
 
-my_obs_df = outliers_new.copy()
+    def psi_dot_dot(self, y, x):
+        T1 = -1/self.params['sigma']**2
+        T2 = -(self.params['nu']+1)*\
+            (
+                self.params['nu']*self.params['delta']**2 - (y - np.inner(x, self.params['beta']))**2
+            )/\
+            (
+                self.params['nu']*self.params['delta']**2 + (y - np.inner(x, self.params['beta']))**2
+            )
+        return T1 + T2
 
-for time, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
 
-    my_obs_df_this_time = my_obs_df[my_obs_df.time==time].reset_index(drop=True)
-    num_pixels = len(my_obs_df_this_time.index)
+def psi(y, x, mu, sigma, nu, delta, beta):
+    T1 = -0.5*np.log(2*np.pi*sigma**2) - 0.5*(y - mu)**2/sigma**2
+    T2 = -0.5*np.log(np.pi*nu*delta**2) + \
+        np.log(gamma((nu+1)/2) / gamma(nu/2)) - \
+            (nu+1)*(1+(y-x)**2/(nu*delta**2))/2
+    return T1 + T2
 
-    with open(prediction_set, "r") as f:
-        my_predict_df_this_time = pd.read_csv(f, index_col=0).sort_values(
-            ['time', 'longitude', 'latitude', 'variant']
-        ).reset_index(
-            drop=True
+
+def psi_dot_dot(y, x, mu, sigma, nu, delta, beta):
+    T1 = -1/sigma**2
+    T2 = -(nu+1)*(nu*delta**2 - (y-x)**2)/\
+        (nu*delta**2 - (y-x)**2)
+    return T1 + T2
+
+
+def p_pdf(y, mu, sigma, nu, delta, beta):
+    p = []
+    for j in range(len(y)):
+        def f(x):
+            return np.exp(psi(y, x, mu, sigma, nu, delta, beta))
+        res, err = quad_vec(f, -10, 10)
+        p.append(res)
+    return np.array(p).reshape(-1)
+
+
+def q_pdf(y, x, l, mu, sigma, nu, delta, beta):
+    p = []
+    for j in range(len(y)):
+        y_hat = l.y_hat(y[j], x[j])
+        C = np.sqrt(
+            -2*math.pi/psi_dot_dot(
+                y_hat, x[j], mu, sigma, nu, delta, beta
+            )
         )
-
-    my_predict_dfs = [
-        my_predict_df_this_time.iloc[k*5000:(k+1)*5000, :].reset_index(drop=True) 
-        for k in range(num_pixels)
-    ]
-
-    for row in range(num_pixels):
-        print(my_predict_dfs[row].loc[:, ['latitude', 'longitude', 'time']])
-        print(my_obs_df_this_time.loc[row, ['latitude', 'longitude', 'time']])
+        p.append(C*np.exp(psi(
+            y_hat, x[j], mu, sigma, nu, delta, beta
+        )))
+    return np.array(p).reshape(-1)
 
 
-
-def get_all_squares(outlier_set=outliers_new, method='sb'):
+def approx_mle(y, x, l, theta1=[0., 1.], theta2=[10, 10], theta3=3., laplace=True):
     """
-    y = observed AOD
-    zs = emulated AODs (vector)
-
-    e = estimated instrument error standard deviation
-    ss = standard deviation of AOD emulation
-
-
-    Arguments
-
-    idxSet : Set of row indices which are to be excluded from analysis
-    method : Which method to use for estimating uncertainties, either 'sb' (strict bounds, our method) or 'hm' (history
-        matching, based on Johnson et al. (2020))
-
-
-    Value
-    
-    Tuple : "Distances" (differences in response) and "variances" (terms needed to normalize the distances)
+    Value:
+        delta, nu, log-likelihood
     """
-    allDistances = []
-    allVariances = []
-
-    idxSet=list((outlier_set['missing']) | (outlier_set['outlier']))
-    my_obs_df = outlier_set.copy()
-    my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
-
-    for time, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
-        
-        my_obs_df_this_time = my_obs_df[my_obs_df.time==time].reset_index(drop=True)
-        num_pixels = len(my_obs_df_this_time.index)
-        
-        with open(prediction_set, "r") as f:
-            my_predict_df_this_time = pd.read_csv(f, index_col=0).sort_values(
-                ['time', 'longitude', 'latitude', 'variant']
-            ).reset_index(
-                drop=True
-            )
-        
-        my_predict_dfs = [
-            my_predict_df_this_time.iloc[k*5000:(k+1)*5000, :].reset_index(drop=True) 
-            for k in range(num_pixels)
-        ]
-
-        for row in range(num_pixels):
-
-            y = my_obs_df_this_time.loc[row, 'meanResponse']
-            if method=='sb':
-                e = my_obs_df_this_time.loc[row, 'sdResponse']**2
-            elif method=='hm':
-                # Per Johnson et al. (2020), instrument uncertainty is 10%, spatial co-location uncertainty is 20%, and
-                # temporal sampling uncertainty is 10% of the measured value.
-                e = (0.1+0.2+0.1)*y
-
-            zs = my_predict_dfs[row]['mean']
-            ss = my_predict_dfs[row]['std']**2
-
-            if ~np.isnan(y) and y != 0:
-                distances = list(y - zs)
-                variances = list(e + ss)
-            else:
-                distances = [float('nan')]*len(zs)
-                variances = [float('nan')]*len(zs)
-
-            allDistances.append(pd.DataFrame(distances).transpose())
-            allVariances.append(pd.DataFrame(variances).transpose())
-
-    return (
-        pd.concat(allDistances, axis=0).reset_index(drop=True),
-        pd.concat(allVariances, axis=0).reset_index(drop=True)
+    if laplace:
+        pdf = q_pdf
+    else:
+        pdf = p_pdf
+    log_lik = minimize(
+        lambda theta0: -np.sum(np.log(pdf(
+            y, x, l,
+            *theta1, theta0[0], theta0[1], theta3
+        ))),
+        theta2,
+        method='L-BFGS-B',
+        tol=10e-10,
+        bounds=[(2.5, np.inf), (0.1, np.inf)]
     )
 
-
-def l_new(d, u):
-    # negative Log likelihood, to be minimized
-    term1 = np.nansum(np.log(my_variances_new.iloc[:, u] + d**2))
-    term2 = np.nansum(np.power(my_distances_new.iloc[:, u], 2) / (my_variances_new.iloc[:, u] + d**2))
-    return 0.5 * (term1 + term2)
-
-
-max_l_for_us_new = []
-
-for u in range(5000):
-    res = minimize_scalar(lambda d: l_new(d, u))
-    max_l_for_us_new.append(-res.fun)
-
-
-with open('mle_new', 'w') as f:
-    write = csv.writer(f)
-    write.writerow([u_mle_new, additional_variance_new])
-f.close()
+    return log_lik.x[0], log_lik.x[1], -log_lik.fun
