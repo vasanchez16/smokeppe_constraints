@@ -1,0 +1,15 @@
+{
+    "save_here_dir": "ocean0",
+    "run_label": "runtest",
+    "emulator_folder_path": "ocean",
+    "satellite_file_path": "ocean2",
+    "obsSdCensor": 0.1,
+    "inputs_file_path": "ocean3",
+    "subregion_filter":{
+        "toggle_filter":false,
+        "lat_min":0,
+        "lat_max":0,
+        "lon_min":0,
+        "lon_max":0
+    }
+}
