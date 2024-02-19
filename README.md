@@ -13,6 +13,6 @@ If desired, set up a default input and output with a `config.ini` file. For exam
 
 ```
 [DEFAULT]
-InputFile = /jet/home/jcarzon/smokeppe_constraints/examples/test_params.json
-OutputDir = /ocean/projects/atm200005p/jcarzon/results/
+InputFile = /input/directory/test_params.json
+OutputDir = /output/directory/
 ```
