@@ -4,6 +4,7 @@
     "emulator_folder_path": "ocean",
     "satellite_file_path": "ocean2",
     "obsSdCensor": 0.1,
+    "leastSquaresThreshold": 8,
     "inputs_file_path": "ocean3",
     "subregion_filter":{
         "toggle_filter":false,
