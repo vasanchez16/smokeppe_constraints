@@ -10,6 +10,7 @@ import click
 @click.command()
 @click.argument('eval_parameters_file_path', type=str)
 
+
 def runEmEval(eval_parameters_file_path):
     ###############################################################################
     with open(eval_parameters_file_path,'r') as file:
@@ -41,26 +42,6 @@ def runEmEval(eval_parameters_file_path):
     my_obs_df = pd.read_csv(satellite_file_path,index_col=0)
     my_obs_df.sort_values(['time','longitude','latitude'], inplace=True, ignore_index=True)
 
-    if toggle_filter:
-        plt.figure(figsize=(12,10))
-        ax = plt.subplot(111,projection=ccrs.PlateCarree())
-        ax.set_extent([-60,45,-45,15], crs=ccrs.PlateCarree())
-        plt.gca().coastlines()
-        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
-
-        rect1 = patches.Rectangle((lon_low, lat_low), 
-                                lon_high - lon_low, 
-                                lat_high - lat_low, 
-                                linestyle='--', edgecolor='red', facecolor='none', linewidth=4, label='Subregion'
-                                )
-        ax.add_patch(rect1)
-        gl.xlabel_style = {'fontsize':20}
-        gl.ylabel_style = {'fontsize':20}
-
-        plt.legend(prop={'size': 18})
-        plt.title('Subregion Filter', fontsize=30)
-        plt.savefig(data_folder + 'subregion', dpi=300)
-
 
     # Making filenames to read predictions csvs
     days = [str(n).zfill(2) for n in range(1, 32)]
@@ -88,13 +69,7 @@ def runEmEval(eval_parameters_file_path):
 
     num_variants = inputs_df.shape[0]
 
-    if toggle_filter:
-        subregion_filt_idx_set = list((my_obs_df['latitude'] < lat_low) | (my_obs_df['longitude'] < lon_low) | (my_obs_df['latitude'] > lat_high) | (my_obs_df['longitude'] > lon_high))
-        my_obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
-
     my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
-
-
 
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         print(tm,prediction_set)
@@ -102,7 +77,7 @@ def runEmEval(eval_parameters_file_path):
         num_pixels = len(my_obs_df_this_time.index) # give the number of lat_long points for one time
         
         #need to make df of prediction outputs for each day
-        my_predict_df_this_time = pd.read_csv(ocean_smokeppe_dir + 'predictions/' + prediction_set + '.csv', index_col=0) ###
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set + '.csv', index_col=0) ###
         my_predict_df_this_time.sort_values(['longitude','latitude','variant'],inplace=True, ignore_index=True)
         
         #makes a list of df's, each df represents a different gstp
@@ -141,7 +116,44 @@ def runEmEval(eval_parameters_file_path):
     outliers_df['leastSquares'] = leastSqs
     outliers_df['distances'] = distances
     outliers_df['variances'] = variances
-    outliers_df.to_csv(save_here_dir + 'outliers.csv',index=True)
+
+    #filter out the outliers
+    ###############################################################################
+    ls_thresh = 8
+    ###############################################################################
+
+    # Initiate for plots
+    fig, ax1 = plt.subplots(figsize=(10,10))
+    # Plot outer histogram
+    ax1.hist(outliers_df.leastSquares,bins=400)
+    # Set inner axes
+    axins = ax1.inset_axes([0.25,0.28,0.7,.7])
+    # Plot inner axes
+    axins.hist(outliers_df.leastSquares,bins=400)
+    # Create threshold line on plot
+    axins.vlines([ls_thresh,ls_thresh],-1,2501,linestyles='--',color='red')
+
+    #subregion of original image
+    x1,x2,y1,y2 = -5,40,0,2500
+    axins.set_xlim(x1,x2)
+    axins.set_ylim(y1,y2)
+    # Initiate
+    ax1.indicate_inset_zoom(axins, edgecolor='black')
+    # Labels
+    plt.xlabel('Minimum Least Squares Value for Each Surrogate Model', fontsize=14)
+    plt.ylabel('Number of Occurences', fontsize=14)
+    plt.savefig(save_here_dir + 'outliersFig', dpi = 300)
+    # Create column to label missing data
+    outliers_df['missing'] = np.isnan(outliers_df.leastSquares)
+
+
+    print(f'Least squares threshold:{ls_thresh}')
+    # Create column to label points as outliers or above LS threshold
+    outliers_df['outlier'] = [
+        outliers_df.leastSquares[k] > ls_thresh for k in range(len(outliers_df.leastSquares))
+                            ]
+    # Save new outliers csv with outlier and missing columns
+    outliers_df.to_csv(save_here_dir + 'outliers.csv', index=True)
 
 
 if __name__ == '__main__':
