@@ -3,6 +3,7 @@ quantificaiton/estimation of Implausibility values.
 """
 from .convolution import (conv_gauss_t, conv_gauss_t_2)
 from .mle import (Likelihood, psi, psi_dot_dot, p_pdf, q_pdf, approx_mle)
+from .model_discrepancy import calculate_distances_and_variances
 
 __all__ = [
     'conv_gauss_t',
@@ -12,5 +13,6 @@ __all__ = [
     'psi_dot_dot',
     'p_pdf',
     'q_pdf',
-    'approx_mle'
+    'approx_mle',
+    'calculate_distances_and_variances'
 ]
