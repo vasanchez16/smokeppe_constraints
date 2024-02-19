@@ -11,7 +11,7 @@ import click
 @click.argument('eval_parameters_file_path', type=str)
 
 
-def runEmEval(eval_parameters_file_path):
+def EmulatorEval(eval_parameters_file_path):
     ###############################################################################
     with open(eval_parameters_file_path,'r') as file:
         evaluation_parameters = json.load(file)

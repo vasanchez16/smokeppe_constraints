@@ -25,15 +25,17 @@ import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
-import EmulatorEval, ModelDiscrepancy, MLE
-from src.emulator.simulator import Px, Pyx, sample
-from src.inference.mle import Likelihood, approx_mle, psi, psi_dot_dot, p_pdf, q_pdf
+from EmulatorEval import EmulatorEval
+from ModelDiscrepancy import ModelDiscrepancy
+from MLE import MLE
+from src.utils import set_up_directories
 
 # Config
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-input_dir = config.get('DEFAULT', 'InputDir')
+input_file = config.get('DEFAULT', 'InputFile')
+output_dir = config.get('DEFAULT', 'OutputDir')
 
 
 def main(args):
@@ -47,26 +49,26 @@ def main(args):
         None
     """
     start_time = time.time()
-    results_dir = args.results
-    fig_dir = results_dir + 'fig/'
-    sim_loc = results_dir + 'sim_data.csv'
-    obs_loc = results_dir + 'obs_data.csv'
-    params_loc = results_dir + 'params_data.csv'
-    emu_loc = results_dir + 'emu_data.csv'
-    mle_loc = results_dir + 'mle_data.csv'
-
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-    if not os.path.exists(fig_dir):
-        os.makedirs(fig_dir)
-
-    EmulatorEval(args)
-    ModelDiscrepancy(args)
-    MLE(args)
 
 
     """
-    Training time report
+    Set up directories
+    """
+    set_up_directories(args)
+
+
+    """
+    Run pipelines
+    """
+    EmulatorEval(args)
+    ModelDiscrepancy(args)
+    MLE(args)
+    # Implausibilities(args)
+    # FreqConfSet(args)
+
+
+    """
+    Runtime report
     """
     end_time = time.time()
     during_time = end_time - start_time
@@ -76,12 +78,17 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run simulation.")
-    parser.add_argument("--savefigs", action="store_true", default=True)
+    parser = argparse.ArgumentParser(description="Run pipeline.")
+    parser.add_argument("--savefigs", action="store_true", default=False)
     parser.add_argument(
-        "--results",
+        "--input_file",
         type=str,
-        default=input_dir
+        default=input_file
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=output_dir
     )
     args = parser.parse_args()
     main(args)
