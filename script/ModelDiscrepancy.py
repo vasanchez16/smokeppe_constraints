@@ -1,45 +1,45 @@
 import numpy as np
 import pandas as pd
+import json
 from src.inference import calculate_distances_and_variances
-from src.inference.utils import save_dataset
+from src.inference.utils import save_dataset, get_em_pred_filenames
 
 def ModelDiscrepancy(args):
     """Collect datasets"""
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label
+
+    emulator_folder_path = eval_params['emulator_output_folder_path']
+    satellite_file_path = eval_params['satellite_file_path']
+    inputs_file_path = eval_params['emulator_inputs_file_path']
+    subregion_filter = eval_params['subregion_filter']
+
     # Import input emulator parameter combinations
-    inputs_df = pd.read_csv(ocean_smokeppe_dir + 'emulatorVariants10k.csv',index_col=0) ###
+    inputs_df = pd.read_csv(inputs_file_path,index_col=0) ###
+    num_variants = inputs_df.shape[0]
 
     # Import MODIS observations dataframe
-    obs_df = pd.read_csv(data_folder + 'outliers.csv', index_col=0)
+    obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
 
-    # Making filenames to read predictions csvs
-    days = [str(n).zfill(2) for n in range(1, 32)]
-    times = ["09_20_00", "12_20_00"]
-
-    # Since the predictions take up so much space, they are separated by day
-    prediction_sets_aug = ["predictions_08_" + day + "_17_" + time for day in days for time in times] ###
-
-    days = [str(n).zfill(2) for n in range(1, 31)]
-    times = ["09_20_00", "12_20_00"]
-
-    # Since the predictions take up so much space, they are separated by day
-    prediction_sets_sept = ["predictions_09_" + day + "_17_" + time for day in days for time in times] ###
-
-    prediction_sets = prediction_sets_aug + prediction_sets_sept
+    prediction_sets = get_em_pred_filenames(args)
     prediction_sets = prediction_sets[:28] # this line is temporary
-
-    idxSet=list((obs_df['missing']) | (obs_df['outlier'])) ###
 
     """
     Calculate distances and variances
     """
-    calculate_distances_and_variances(inputs_df, obs_df, idxSet, ocean_smokeppe_dir, prediction_sets)
+    all_dists_df, all_vars_df = calculate_distances_and_variances(args, num_variants, obs_df, args.output_dir, prediction_sets)
 
 
     """
     Save datasets
     """
-    save_dataset(all_dists_df, data_folder + 'distances.csv')
-    save_dataset(all_vars_df, data_folder + 'variances.csv')
+    save_dataset(all_dists_df, save_here_dir + 'distances.csv')
+    save_dataset(all_vars_df, save_here_dir + 'variances.csv')
 
 
     return
