@@ -13,6 +13,8 @@ If desired, set up a default input and output with a `config.ini` file. For exam
 
 ```
 [DEFAULT]
-InputFile = /input/directory/test_params.json
+InputFile = /input/directory/evalParameters.json
 OutputDir = /output/directory/
 ```
+
+See evalParametersTemplate.json for example of the contents of this json file.
