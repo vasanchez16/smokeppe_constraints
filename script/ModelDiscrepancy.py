@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 from src.inference import calculate_distances_and_variances
-from src.utils import save_dataset, save_indexed_dataset
+from src.inference.utils import save_dataset
 
-def model_discrepancy(args):
+def ModelDiscrepancy(args):
     """Collect datasets"""
     # Import input emulator parameter combinations
     inputs_df = pd.read_csv(ocean_smokeppe_dir + 'emulatorVariants10k.csv',index_col=0) ###
@@ -41,8 +41,5 @@ def model_discrepancy(args):
     save_dataset(all_dists_df, data_folder + 'distances.csv')
     save_dataset(all_vars_df, data_folder + 'variances.csv')
 
-    if args.save_best:
-        save_indexed_dataset(all_dists_df, 8210, data_folder + 'dists_8210.csv')
-        save_indexed_dataset(all_vars_df, 8210, data_folder + 'vars_8210.csv')
 
     return
