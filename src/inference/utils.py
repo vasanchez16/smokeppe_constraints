@@ -104,12 +104,28 @@ def save_indexed_dataset():
     return
 
 def set_up_directories(args):
+    """
+    add doc
+    """
     
-    eval_params = args.input_file
-    with open(eval_params,'r') as file:
-        evaluation_parameters = json.load(file)
-    run_label = evaluation_parameters['run_label']
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    run_label = eval_params['run_label']
 
     if not os.path.exists(args.output_dir + run_label):
         os.mkdir(args.output_dir + run_label)
     return
+
+def get_em_pred_filenames(args):
+    """
+    getting sorted list of the em prediciton filenames
+    """
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    emulator_folder_path = eval_params['emulator_output_folder_path']
+
+    folder_contents = os.listdir(emulator_folder_path)
+    folder_contents.sort()
+
+    return folder_contents
