@@ -6,23 +6,27 @@ import matplotlib.patches as patches
 import os
 from datetime import datetime
 import json
-import click
-@click.command()
-@click.argument('eval_parameters_file_path', type=str)
+from src.inference.utils import get_em_pred_filenames
 
 
-def EmulatorEval(eval_parameters_file_path):
-    ###############################################################################
-    with open(eval_parameters_file_path,'r') as file:
-        evaluation_parameters = json.load(file)
+def EmulatorEval(args):
+    """
+    input_file
+    output_dir
+    """
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
 
-    save_here_dir = evaluation_parameters['save_here_dir']
-    run_label = evaluation_parameters['run_label']
-    emulator_folder_path = evaluation_parameters['emulator_folder_path']
-    satellite_file_path = evaluation_parameters['satellite_file_path']
-    obsSdCensor = evaluation_parameters['obsSdCensor']
-    inputs_file_path = evaluation_parameters['inputs_file_path']
-    subregion_filter = evaluation_parameters['subregion_filter']
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label
+
+    emulator_folder_path = eval_params['emulator_output_folder_path']
+    satellite_file_path = eval_params['satellite_file_path']
+    obsSdCensor = eval_params['obsSdCensor']
+    ls_thresh = eval_params['leastSquaresThreshold']
+    inputs_file_path = eval_params['emulator_inputs_file_path']
+    subregion_filter = eval_params['subregion_filter']
 
     # Extracting values from the subregion_filter dictionary
     toggle_filter = subregion_filter['toggle_filter']
@@ -31,38 +35,18 @@ def EmulatorEval(eval_parameters_file_path):
     lon_min = subregion_filter['lon_min']
     lon_max = subregion_filter['lon_max']
 
-
-    if not os.path.exists(save_here_dir + run_label):
-        os.mkdir(save_here_dir + run_label)
-
     # Import input emulator parameter combinations
     inputs_df = pd.read_csv(inputs_file_path,index_col=0)
 
     # Import MODIS observations dataframe
     my_obs_df = pd.read_csv(satellite_file_path,index_col=0)
-    my_obs_df.sort_values(['time','longitude','latitude'], inplace=True, ignore_index=True)
+    my_obs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
 
-
-    # Making filenames to read predictions csvs
-    days = [str(n).zfill(2) for n in range(1, 32)]
-    times = ["09_20_00", "12_20_00"]
-
-    # Since the predictions take up so much space, they are separated by day
-    prediction_sets_aug = ["predictions_08_" + day + "_17_" + time for day in days for time in times] ###
-    prediction_sets_aug
-
-    days = [str(n).zfill(2) for n in range(1, 31)]
-    times = ["09_20_00", "12_20_00"]
-
-    # September files
-    prediction_sets_sept = ["predictions_09_" + day + "_17_" + time for day in days for time in times] ###
-    prediction_sets_sept
-
-    prediction_sets = prediction_sets_aug + prediction_sets_sept
+    prediction_sets = get_em_pred_filenames(args)
     prediction_sets = prediction_sets[:28] # this line is temporary
 
     # Emulator Evaluation
-    #making empty data storage lists for last calculations
+    # making empty data storage lists for last calculations
     which_gets_least_squares = []
     distances = []
     variances = []
@@ -78,7 +62,7 @@ def EmulatorEval(eval_parameters_file_path):
         
         #need to make df of prediction outputs for each day
         my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set + '.csv', index_col=0) ###
-        my_predict_df_this_time.sort_values(['longitude','latitude','variant'],inplace=True, ignore_index=True)
+        my_predict_df_this_time.sort_values(['latitude','longitude','variant'],inplace=True, ignore_index=True)
         
         #makes a list of df's, each df represents a different gstp
         my_predict_dfs = [
@@ -106,7 +90,7 @@ def EmulatorEval(eval_parameters_file_path):
             else:
                 distances.append(float("nan"))
                 variances.append(float("nan"))
-        print(f'Done with {prediction_set}')
+        print(f'{prediction_set} completed.')
 
     leastSqs = [np.abs(distances[k]) / np.sqrt(variances[k]) for k in range(len(distances))]
 
@@ -118,9 +102,6 @@ def EmulatorEval(eval_parameters_file_path):
     outliers_df['variances'] = variances
 
     #filter out the outliers
-    ###############################################################################
-    ls_thresh = 8
-    ###############################################################################
 
     # Initiate for plots
     fig, ax1 = plt.subplots(figsize=(10,10))
@@ -144,9 +125,9 @@ def EmulatorEval(eval_parameters_file_path):
     plt.ylabel('Number of Occurences', fontsize=14)
     plt.savefig(save_here_dir + 'outliersFig', dpi = 300)
     # Create column to label missing data
+
+
     outliers_df['missing'] = np.isnan(outliers_df.leastSquares)
-
-
     print(f'Least squares threshold:{ls_thresh}')
     # Create column to label points as outliers or above LS threshold
     outliers_df['outlier'] = [
