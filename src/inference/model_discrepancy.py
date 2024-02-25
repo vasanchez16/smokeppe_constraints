@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def calculate_distances_and_variances(inputs_df, obs_df, idxSet, ocean_smokeppe_dir, prediction_sets):
+def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe_dir, prediction_sets):
     """
     Calculate distances and variances based on the given inputs and observations.
 
@@ -20,9 +20,8 @@ def calculate_distances_and_variances(inputs_df, obs_df, idxSet, ocean_smokeppe_
     allDistances = []
     allVariances = []
 
-    num_variants = inputs_df.shape[0]
-
     my_obs_df = obs_df.copy()
+    idxSet=list((obs_df['missing']) | (obs_df['outlier'])) ###
     # set missing or outlier values to nan
     my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
 
@@ -32,7 +31,7 @@ def calculate_distances_and_variances(inputs_df, obs_df, idxSet, ocean_smokeppe_
         num_pixels = len(my_obs_df_this_time.index)
 
         my_predict_df_this_time = pd.read_csv(ocean_smokeppe_dir + 'predictions/' + prediction_set + '.csv', index_col=0)
-        my_predict_df_this_time.sort_values(['longitude','latitude','variant'], inplace=True, ignore_index=True)
+        my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
         print(f'Read in {prediction_set}')
 
