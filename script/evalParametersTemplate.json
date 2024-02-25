@@ -1,6 +1,6 @@
 {
     "run_label": "str: A folder will be created with this name in your output directory",
-    "emulator_output_folder_path": "str: A folder that stores csv files containig the emulator predictions. Predictions should be labeled ",
+    "emulator_output_folder_path": "str: A folder that stores csv files containig the emulator predictions. Predictions should be labeled as predictions_YYYY_MM_DD_HH_mm_SS.csv ",
     "satellite_file_path": "str: A csv file that contains the satellite data for comparison.",
     "obsSdCensor": "float: The highest standard deviation acceptable for satellite measurements (those higher will be filtered out).",
     "emulator_inputs_file_path": "str: A csv file that includes the feature values for each emulator variant.",
