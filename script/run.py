@@ -28,7 +28,7 @@ sys.path.append(parent_dir)
 from EmulatorEval import EmulatorEval
 from ModelDiscrepancy import ModelDiscrepancy
 from MLE import MLE
-from src.utils import set_up_directories
+from src.inference.utils import set_up_directories
 
 # Config
 config = configparser.ConfigParser()

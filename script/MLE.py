@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize_scalar
-from src.utils import save_dataset, save_indexed_dataset
+from src.inference.utils import save_dataset, save_indexed_dataset
 
 
 def MLE(args):
