@@ -26,6 +26,9 @@ MANIFEST
 # Configuration file
 config.ini
 
+# File for the evaluation parameters 
+evalParameters.json
+
 # Workspace file
 .vscode/
 
