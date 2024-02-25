@@ -45,12 +45,20 @@ def main(args):
     Args:
         args (argparse.Namespace): Command-line arguments.
 
+    input_file
+    output_dir
+
     Returns:
         None
     """
     start_time = time.time()
 
-
+    """
+    Some checks for code to work properly.
+    """
+    if args.output_dir[-1] != '/':
+        raise(ValueError('End OutputDir with \'/\' character'))
+    
     """
     Set up directories
     """
