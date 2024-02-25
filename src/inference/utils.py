@@ -15,6 +15,7 @@ from matplotlib import ticker
 import cartopy.crs as ccrs
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
+import json
 sys.path.append(os.getcwd())
 
 
@@ -83,3 +84,32 @@ def approx_mle(z, mu, sigma, theta0=[10, 10]):
         bounds=[(0.1, np.inf), (2.5, np.inf)]
     )
     return log_lik.x[0], log_lik.x[1], -log_lik.fun
+
+def save_dataset(data, save_path):
+    """
+    Arguments:
+    data: pandas DataFrame Obj
+    Data to be saved
+    save_path: str
+    Path where this data will be saved
+    """
+    data.to_csv(save_path)
+    return
+
+def save_indexed_dataset():
+    """
+    Save distances separately for specific parameter set.
+    Implement later if needed
+    """
+    return
+
+def set_up_directories(args):
+    
+    eval_params = args.input_file
+    with open(eval_params,'r') as file:
+        evaluation_parameters = json.load(file)
+    run_label = evaluation_parameters['run_label']
+
+    if not os.path.exists(args.output_dir + run_label):
+        os.mkdir(args.output_dir + run_label)
+    return
