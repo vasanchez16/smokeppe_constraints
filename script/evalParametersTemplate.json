@@ -10,5 +10,10 @@
         "lat_max":"float: Maximum latitude",
         "lon_min":"float: Minimum longitude",
         "lon_max":"float: Maximum longitude"
+    },
+    "parameters_dictionary":{
+        "notes": "This is just an example to expand to the full names of parameters when making plots.",
+        "smoke_emiss" : "Smoke Emissions",
+        "smoke_diam": "Smoke Diameter"
     }
 }
