@@ -61,7 +61,7 @@ def main(args):
         eval_params = json.load(file)
 
     possible_methods = ['convolution','student-t','gaussian']
-    if eval_params['stats_distribution_method'] in possible_methods:
+    if not (eval_params['stats_distribution_method'] in possible_methods):
         raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
 
     if args.output_dir[-1] != '/':
