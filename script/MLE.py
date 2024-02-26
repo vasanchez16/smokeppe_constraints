@@ -15,6 +15,7 @@ def MLE(args):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
+    stats_dist_method = eval_params['stats_distribution_method']
 
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
