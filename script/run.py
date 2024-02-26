@@ -97,6 +97,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline.")
     parser.add_argument("--savefigs", action="store_true", default=False)
+    parser.add_argument("--laplace", action="store_true", default=False)
     parser.add_argument(
         "--input_file",
         type=str,
