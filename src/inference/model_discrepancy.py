@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import json
 
 
 def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe_dir, prediction_sets):
@@ -17,6 +18,15 @@ def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe
     - all_dists_df: DataFrame containing distances
     - all_vars_df: DataFrame containing variances
     """
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+    emulator_folder_path = eval_params['emulator_output_folder_path']
+
     allDistances = []
     allVariances = []
 
@@ -30,7 +40,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
         num_pixels = len(my_obs_df_this_time.index)
 
-        my_predict_df_this_time = pd.read_csv(ocean_smokeppe_dir + 'predictions/' + prediction_set + '.csv', index_col=0)
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set + '.csv', index_col=0)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
         print(f'Read in {prediction_set}')
