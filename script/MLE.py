@@ -32,7 +32,7 @@ def MLE(args):
     Calculate MLE for model discrepancy
     """
     if stats_dist_method == 'convolution':
-        x_0,x_1,fun_val = approx_mle(my_distances, my_variances, num_variants, args.laplace)
+       opt_vals,col_names = approx_mle(my_distances, my_variances, num_variants, args.laplace)
     elif stats_dist_method == 'student_t':
         opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
     elif stats_dist_method == 'gaussian':
@@ -44,7 +44,7 @@ def MLE(args):
     Save datasets
     """
     # Save metrics to dataframe and csv
-    mle_df = pd.DataFrame([x_0,x_1,fun_val],index=['x_0','x_1','fun_val']).transpose()
+    mle_df = pd.DataFrame(opt_vals,index=col_names).transpose()
     save_dataset(mle_df, save_here_dir + 'mle.csv')
 
     # Save all likelihood terms and all model discrep terms to dataframe

@@ -124,8 +124,9 @@ def approx_mle(y, x, l, theta1=[0., 1.], theta2=[10, 10], theta3=3., laplace=Tru
         tol=10e-10,
         bounds=[(2.5, np.inf), (0.1, np.inf)]
     )
-
-    return log_lik.x[0], log_lik.x[1], -log_lik.fun
+    opt_vals = [log_lik.x[0], log_lik.x[1], -log_lik.fun]
+    column_names = ['x_0','x_1','fun_val']
+    return opt_vals, column_names
 
 def mle_t(args, distances, variances, num_variants):
     """
