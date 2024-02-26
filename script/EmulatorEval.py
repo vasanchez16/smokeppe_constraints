@@ -19,7 +19,7 @@ def EmulatorEval(args):
 
     # Extract evaluation parameters
     run_label = eval_params['run_label']
-    save_here_dir = args.output_dir + run_label
+    save_here_dir = args.output_dir + run_label + '/'
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
