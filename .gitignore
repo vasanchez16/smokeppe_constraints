@@ -31,7 +31,8 @@ evalParameters.json
 
 # slurm batches
 run_all.sh
-# .out
+# slurm output files
+*.out
 
 # Workspace file
 .vscode/
