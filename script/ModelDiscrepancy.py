@@ -12,12 +12,11 @@ def ModelDiscrepancy(args):
 
     # Extract evaluation parameters
     run_label = eval_params['run_label']
-    save_here_dir = args.output_dir + run_label
+    save_here_dir = args.output_dir + run_label + '/'
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
     inputs_file_path = eval_params['emulator_inputs_file_path']
-    subregion_filter = eval_params['subregion_filter']
 
     # Import input emulator parameter combinations
     inputs_df = pd.read_csv(inputs_file_path,index_col=0) ###
