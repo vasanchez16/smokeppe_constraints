@@ -31,10 +31,10 @@ def FreqConfSet(args):
     
     num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])
 
-    if stats_dist_method == 'student_t':
-        cv = get_implaus_thresh_t(args, num_points)
-    elif stats_dist_method == 'convolution':
-        cv = get_implaus_thresh_conv(args)
+    if stats_dist_method == 'convolution':
+        cv = get_implaus_thresh_conv(args, num_points)
+    elif stats_dist_method == 'student_t':
+        cv = get_implaus_thresh_t(args)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gauss(args)
     print(f'Threshold for 95th percentile: {cv}')
