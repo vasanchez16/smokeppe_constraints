@@ -2,26 +2,29 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize_scalar
 from src.inference.utils import save_dataset, save_indexed_dataset
-
+from src.inference import approx_mle
+import json
 
 def MLE(args):
     """
     Collect datasets
     """
-    with open('run_label.txt', 'r') as file:
-        run_label = file.read()
-    print(f'Run label: {run_label}')
-    ocean_smokeppe_dir = '/ocean/projects/atm200005p/vsanchez/SmokePPEOutputs/'
-    data_folder = ocean_smokeppe_dir + 'results_runs/' + run_label + '/'
-    ###############################################################################
-    inputs_df = pd.read_csv(ocean_smokeppe_dir + 'emulatorVariants10k.csv',index_col=0) ###
-    num_variants = inputs_df.shape[0]
-    ###############################################################################
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
 
-    print('Reading in dists...')
-    my_distances = pd.read_csv(data_folder + 'distances.csv',index_col=0)
-    print('Reading in varis...')
-    my_variances = pd.read_csv(data_folder + 'variances.csv',index_col=0)
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+    
+    inputs_file_path = eval_params['emulator_inputs_file_path']
+
+    inputs_df = pd.read_csv(inputs_file_path,index_col=0)
+    num_variants = inputs_df.shape[0]
+
+    print('Reading in distances...')
+    my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
+    print('Reading in variances...')
+    my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
 
 
     """
@@ -57,11 +60,11 @@ def MLE(args):
     """
     # Save metrics to dataframe and csv
     mle_df = pd.DataFrame([u_mle,additional_variance],index=['parameterSetNum','modelDiscrep']).transpose()
-    save_dataset(mle_df, data_folder + 'mle.csv')
+    save_dataset(mle_df, save_here_dir + 'mle.csv')
 
     # Save all likelihood terms and all model discrep terms to dataframe
     param_mle_stats_df = pd.DataFrame([model_discrep_terms, max_l_for_us], index=['delta_mle', 'likelihood']).transpose()
-    save_dataset(param_mle_stats_df, data_folder + 'param_mle_stats.csv')
+    save_dataset(param_mle_stats_df, save_here_dir + 'param_mle_stats.csv')
 
     return
 
