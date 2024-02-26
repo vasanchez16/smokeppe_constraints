@@ -29,6 +29,10 @@ config.ini
 # File for the evaluation parameters 
 evalParameters.json
 
+# slurm batches
+run_all.sh
+# .out
+
 # Workspace file
 .vscode/
 
