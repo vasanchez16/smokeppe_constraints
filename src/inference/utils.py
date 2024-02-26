@@ -114,6 +114,9 @@ def set_up_directories(args):
 
     if not os.path.exists(args.output_dir + run_label):
         os.mkdir(args.output_dir + run_label)
+
+    if not os.path.exists(args.output_dir + run_label + '/figures'):
+        os.mkdir(args.output_dir + run_label + '/figures')
     return
 
 def get_em_pred_filenames(args):
