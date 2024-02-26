@@ -5,15 +5,16 @@
     "obsSdCensor": "float: The highest standard deviation acceptable for satellite measurements (those higher will be filtered out).",
     "emulator_inputs_file_path": "str: A csv file that includes the feature values for each emulator variant.",
     "subregion_filter":{
-        "toggle_filter":"boolean: Indicates whether or not to perform the workflow on a spatial subregion of the given data",
-        "lat_min":"float: Minimum latitude",
-        "lat_max":"float: Maximum latitude",
-        "lon_min":"float: Minimum longitude",
-        "lon_max":"float: Maximum longitude"
+        "toggle_filter": "boolean: Indicates whether or not to perform the workflow on a spatial subregion of the given data",
+        "lat_min": "float: Minimum latitude",
+        "lat_max": "float: Maximum latitude",
+        "lon_min": "float: Minimum longitude",
+        "lon_max": "float: Maximum longitude"
     },
     "parameters_dictionary":{
         "notes": "This is just an example to expand to the full names of parameters when making plots.",
         "smoke_emiss" : "Smoke Emissions",
         "smoke_diam": "Smoke Diameter"
-    }
+    },
+    "stats_distribution_method": "Options are: (convolution,student-t,gaussian)"
 }
