@@ -126,3 +126,53 @@ def approx_mle(y, x, l, theta1=[0., 1.], theta2=[10, 10], theta3=3., laplace=Tru
     )
 
     return log_lik.x[0], log_lik.x[1], -log_lik.fun
+
+def mle_t(args, distances, variances, num_variants):
+    """
+    mle analysis using the student t approximation
+    """
+    def minus_log_l(d):
+        # get dists for one param set
+        dists = distances.iloc[:,param_set]
+        varis = variances.iloc[:,param_set]
+        # Log likelihood, to be maximized
+        sigma_opt = d[0]
+        nu_opt = d[1]
+
+        coeff = scipy.special.gamma((nu_opt + 1) / 2) / (scipy.special.gamma(nu_opt/2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
+
+        factor2 = 1 + (dists**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+
+        f_t = coeff * factor2**(-1*(nu_opt+1)/2)
+
+        log_Li = np.log(f_t)
+        log_likelihood = np.nansum(log_Li)
+        return -1*log_likelihood
+    
+    # Run minimize scalar for each parameter set
+    max_l_for_us = []
+    sigma_sqr_terms = []
+    nu_terms = []
+    for u in range(num_variants):
+        param_set = u
+        if u%1000 == 0:
+            print(f'Parameter set: {u}')
+        x_0 = [0.02,5]
+        res = minimize(minus_log_l,x_0,bounds=[(0,1),(2+1E-5,30)])
+        max_l_for_us.append(-res.fun)
+        sigma_sqr_terms.append(res.x[0]**2)
+        nu_terms.append(res.x[1])
+
+    # Find parameter set that gives the max likelihood
+    u_mle = max_l_for_us.index(max(max_l_for_us)) # param combination number
+    # Use this parmeter set to get the model discrep term at that parameter set
+    param_set = u_mle
+    x_0 = [0.02,5]
+    dec_vars = minimize(minus_log_l,x_0,bounds=[(0,1),(2+1E-5,30)]).x #val for model discrep term
+    sigma = dec_vars[0]
+    sigma_sqr = sigma**2
+    nu = dec_vars[1]
+    column_names = ['parameter_set_num', 'nu', 'sigma']
+    optimized_vals = [nu, sigma_sqr, max_l_for_us[u_mle]]
+
+    return optimized_vals, column_names
