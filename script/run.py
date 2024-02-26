@@ -20,6 +20,7 @@ import configparser
 import time
 import sys
 import os
+import json
 
 # Add parent directory to sys.path
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -56,8 +57,16 @@ def main(args):
     """
     Some checks for code to work properly.
     """
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    possible_methods = ['convolution','student-t','gaussian']
+    if eval_params['stats_distribution_method'] in possible_methods:
+        raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
+
     if args.output_dir[-1] != '/':
         raise(ValueError('End OutputDir with \'/\' character'))
+    
     
     """
     Set up directories
