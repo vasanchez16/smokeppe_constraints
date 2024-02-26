@@ -7,6 +7,7 @@ import math
 from matplotlib.colors import ListedColormap
 import os
 import json
+from src.inference.implausibility import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gauss
 
 def FreqConfSet(args):
     """
@@ -21,15 +22,23 @@ def FreqConfSet(args):
     save_figs_dir = save_here_dir + 'figures'
     inputs_file_path = eval_params['emulator_inputs_file_path']
     param_dict = eval_params['parameters_dictionary']
+    stats_dist_method = eval_params['stats_distribution_method']
 
     implausibilites = pd.read_csv(save_here_dir + 'implausibilities.csv', index_col=0)
-    inputs_df = pd.read_csv(inputs_file_path, index_col=0) ###
+    inputs_df = pd.read_csv(inputs_file_path, index_col=0)
     obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
     param_short_names = list(inputs_df.columns)
+    
+    num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])
 
-    cv = get_threshold(args)
+    if stats_dist_method == 'student_t':
+        cv = get_implaus_thresh_t(args, num_points)
+    elif stats_dist_method == 'convolution':
+        cv = get_implaus_thresh_conv(args)
+    elif stats_dist_method == 'gaussian':
+        cv = get_implaus_thresh_gauss(args)
     print(f'Threshold for 95th percentile: {cv}')
-    3
+    
     my_input_df = inputs_df.copy()
     my_input_df['implausibilities'] = implausibilites
     title = 'Strict bounds implausibilities'
