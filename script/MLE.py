@@ -15,7 +15,7 @@ def MLE(args):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
-    
+
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
     inputs_df = pd.read_csv(inputs_file_path,index_col=0)
@@ -30,7 +30,7 @@ def MLE(args):
     """
     Calculate MLE for model discrepancy
     """
-    u_mle, additional_variance = approx_mle(my_distances, my_variances, num_variants, args.laplace)
+    x_0,x_1,fun_val = approx_mle(my_distances, my_variances, num_variants, args.laplace)
 
     # # Define function to be used in minimize scalar
     # def l(d, u):
@@ -59,12 +59,12 @@ def MLE(args):
     Save datasets
     """
     # Save metrics to dataframe and csv
-    mle_df = pd.DataFrame([u_mle,additional_variance],index=['parameterSetNum','modelDiscrep']).transpose()
+    mle_df = pd.DataFrame([x_0,x_1,fun_val],index=['x_0','x_1','fun_val']).transpose()
     save_dataset(mle_df, save_here_dir + 'mle.csv')
 
     # Save all likelihood terms and all model discrep terms to dataframe
-    param_mle_stats_df = pd.DataFrame([model_discrep_terms, max_l_for_us], index=['delta_mle', 'likelihood']).transpose()
-    save_dataset(param_mle_stats_df, save_here_dir + 'param_mle_stats.csv')
+    # param_mle_stats_df = pd.DataFrame([model_discrep_terms, max_l_for_us], index=['delta_mle', 'likelihood']).transpose()
+    # save_dataset(param_mle_stats_df, save_here_dir + 'param_mle_stats.csv')
 
     return
 
