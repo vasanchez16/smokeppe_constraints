@@ -3,7 +3,7 @@ import pandas as pd
 import json
 
 
-def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe_dir, prediction_sets):
+def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets):
     """
     Calculate distances and variances based on the given inputs and observations.
 
@@ -40,7 +40,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, ocean_smokeppe
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
         num_pixels = len(my_obs_df_this_time.index)
 
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set + '.csv', index_col=0)
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set , index_col=0)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
         print(f'Read in {prediction_set}')
