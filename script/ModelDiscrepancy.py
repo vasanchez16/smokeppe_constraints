@@ -31,7 +31,7 @@ def ModelDiscrepancy(args):
     """
     Calculate distances and variances
     """
-    all_dists_df, all_vars_df = calculate_distances_and_variances(args, num_variants, obs_df, args.output_dir, prediction_sets)
+    all_dists_df, all_vars_df = calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets)
 
 
     """
