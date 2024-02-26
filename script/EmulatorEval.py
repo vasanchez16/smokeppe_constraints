@@ -61,7 +61,7 @@ def EmulatorEval(args):
         num_pixels = len(my_obs_df_this_time.index) # give the number of lat_long points for one time
         
         #need to make df of prediction outputs for each day
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set + '.csv', index_col=0) ###
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set, index_col=0) ###
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'],inplace=True, ignore_index=True)
         
         #makes a list of df's, each df represents a different gstp
