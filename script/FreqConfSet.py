@@ -19,7 +19,7 @@ def FreqConfSet(args):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
-    save_figs_dir = save_here_dir + 'figures'
+    save_figs_dir = save_here_dir + 'figures/'
     inputs_file_path = eval_params['emulator_inputs_file_path']
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
@@ -32,9 +32,9 @@ def FreqConfSet(args):
     num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])
 
     if stats_dist_method == 'convolution':
-        cv = get_implaus_thresh_conv(args, num_points)
+        cv = get_implaus_thresh_conv(args)
     elif stats_dist_method == 'student-t':
-        cv = get_implaus_thresh_t(args)
+        cv = get_implaus_thresh_t(args,num_points)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gaussian(args)
     print(f'Threshold for 95th percentile: {cv}')
