@@ -27,7 +27,8 @@ MANIFEST
 config.ini
 
 # File for the evaluation parameters 
-evalParameters.json
+*.json
+!evalParametersTemplate.json
 
 # slurm batches
 run_all.sh
