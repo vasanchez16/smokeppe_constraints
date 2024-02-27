@@ -33,7 +33,7 @@ def MLE(args):
     """
     if stats_dist_method == 'convolution':
        opt_vals,col_names = approx_mle(my_distances, my_variances, num_variants, args.laplace)
-    elif stats_dist_method == 'student_t':
+    elif stats_dist_method == 'student-t':
         opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
     elif stats_dist_method == 'gaussian':
         None
