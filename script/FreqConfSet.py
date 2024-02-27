@@ -33,7 +33,7 @@ def FreqConfSet(args):
 
     if stats_dist_method == 'convolution':
         cv = get_implaus_thresh_conv(args, num_points)
-    elif stats_dist_method == 'student_t':
+    elif stats_dist_method == 'student-t':
         cv = get_implaus_thresh_t(args)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gaussian(args)
