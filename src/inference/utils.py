@@ -132,3 +132,17 @@ def get_em_pred_filenames(args):
     folder_contents.sort()
 
     return folder_contents
+
+def run_checks(args):
+    
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    possible_methods = ['convolution','student-t','gaussian']
+    if not (eval_params['stats_distribution_method'] in possible_methods):
+        raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
+
+    if args.output_dir[-1] != '/':
+        raise(ValueError('End OutputDir with \'/\' character'))
+    
+    return

@@ -29,7 +29,7 @@ sys.path.append(parent_dir)
 from EmulatorEval import EmulatorEval
 from ModelDiscrepancy import ModelDiscrepancy
 from MLE import MLE
-from src.inference.utils import set_up_directories
+from src.inference.utils import set_up_directories, run_checks
 
 # Config
 config = configparser.ConfigParser()
@@ -57,15 +57,7 @@ def main(args):
     """
     Some checks for code to work properly.
     """
-    with open(args.input_file,'r') as file:
-        eval_params = json.load(file)
-
-    possible_methods = ['convolution','student-t','gaussian']
-    if not (eval_params['stats_distribution_method'] in possible_methods):
-        raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
-
-    if args.output_dir[-1] != '/':
-        raise(ValueError('End OutputDir with \'/\' character'))
+    run_checks(args)
     
     
     """
