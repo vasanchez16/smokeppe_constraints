@@ -173,7 +173,7 @@ def mle_t(args, distances, variances, num_variants):
     sigma = dec_vars[0]
     sigma_sqr = sigma**2
     nu = dec_vars[1]
-    column_names = ['parameter_set_num', 'nu', 'sigma']
-    optimized_vals = [nu, sigma_sqr, max_l_for_us[u_mle]]
+    column_names = ['parameter_set_num', 'variance_mle', 'nu']
+    optimized_vals = [u_mle, sigma_sqr, nu]
 
     return optimized_vals, column_names

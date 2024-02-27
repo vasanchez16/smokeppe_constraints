@@ -19,7 +19,7 @@ def get_implaus_thresh_t(args, num_points):
     save_here_dir = args.output_dir + run_label + '/'
 
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
-    nu_opt = float(mle_df.loc[0,'nu_opt'])
+    nu_opt = float(mle_df['nu'])
 
     sum_this = []
     for i in range(num_points):
