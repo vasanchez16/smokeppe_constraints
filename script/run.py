@@ -29,6 +29,8 @@ sys.path.append(parent_dir)
 from EmulatorEval import EmulatorEval
 from ModelDiscrepancy import ModelDiscrepancy
 from MLE import MLE
+from Implausibilities import Implausibilities
+from FreqConfSet import FreqConfSet
 from src.inference.utils import set_up_directories, run_checks
 
 # Config
@@ -72,8 +74,8 @@ def main(args):
     EmulatorEval(args)
     ModelDiscrepancy(args)
     MLE(args)
-    # Implausibilities(args)
-    # FreqConfSet(args)
+    Implausibilities(args)
+    FreqConfSet(args)
 
 
     """
