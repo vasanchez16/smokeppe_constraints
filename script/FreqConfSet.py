@@ -7,7 +7,7 @@ import math
 from matplotlib.colors import ListedColormap
 import os
 import json
-from src.inference.implausibility import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gauss
+from src.inference.implausibility import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gaussian
 
 def FreqConfSet(args):
     """
@@ -36,7 +36,7 @@ def FreqConfSet(args):
     elif stats_dist_method == 'student_t':
         cv = get_implaus_thresh_t(args)
     elif stats_dist_method == 'gaussian':
-        cv = get_implaus_thresh_gauss(args)
+        cv = get_implaus_thresh_gaussian(args)
     print(f'Threshold for 95th percentile: {cv}')
     
     my_input_df = inputs_df.copy()
