@@ -26,7 +26,6 @@ def ModelDiscrepancy(args):
     obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
 
     prediction_sets = get_em_pred_filenames(args)
-    prediction_sets = prediction_sets[:28] # this line is temporary
 
     """
     Calculate distances and variances
