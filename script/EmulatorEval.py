@@ -43,7 +43,6 @@ def EmulatorEval(args):
     my_obs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
 
     prediction_sets = get_em_pred_filenames(args)
-    prediction_sets = prediction_sets[:28] # this line is temporary
 
     # Emulator Evaluation
     # making empty data storage lists for last calculations
