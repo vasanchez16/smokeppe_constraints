@@ -142,7 +142,13 @@ def run_checks(args):
     if not (eval_params['stats_distribution_method'] in possible_methods):
         raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
 
+    if (args.output_dir[-1] != '/') and (eval_params['emulator_output_folder_path'] != '/'):
+        raise(ValueError('End OutputDir and emulator_output_folder_path with \'/\' character'))
+
     if args.output_dir[-1] != '/':
         raise(ValueError('End OutputDir with \'/\' character'))
+    
+    if eval_params['emulator_output_folder_path'] != '/':
+        raise(ValueError('End emulator_output_folder_path with \'/\' character'))
     
     return
