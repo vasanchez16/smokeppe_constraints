@@ -75,8 +75,8 @@ def EmulatorEval(args):
             y = my_obs_df_this_time.loc[row, 'meanResponse'] 
             e = my_obs_df_this_time.loc[row, 'sdResponse']**2 
             # each element in pred df's list represents a dif lat_long point
-            zs = my_predict_dfs[row]['mean']
-            ss = my_predict_dfs[row]['std']**2
+            zs = my_predict_dfs[row]['meanResponse']
+            ss = my_predict_dfs[row]['sdResponse']**2
 
             if ~np.isnan(y) and y != 0:
                 squares = list((y - zs)**2 / (e + ss))

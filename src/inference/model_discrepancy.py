@@ -54,8 +54,8 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
             y = my_obs_df_this_time.loc[row, 'meanResponse']
             e = my_obs_df_this_time.loc[row, 'sdResponse']**2
 
-            zs = my_predict_dfs[row]['mean']
-            ss = my_predict_dfs[row]['std']**2
+            zs = my_predict_dfs[row]['meanResponse']
+            ss = my_predict_dfs[row]['sdResponse']**2
 
             if ~np.isnan(y) and y != 0:
                 distances = list(y - zs)
