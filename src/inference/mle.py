@@ -14,6 +14,7 @@ from matplotlib import ticker
 import cartopy.crs as ccrs
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
+import json
 sys.path.append(os.getcwd())
 
 
@@ -132,6 +133,12 @@ def mle_t(args, distances, variances, num_variants):
     """
     mle analysis using the student t approximation
     """
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    bnds = eval_params['MLE_optimization']['bounds']
+    init_vals = eval_params['MLE_optimization']['initial_vals']
+
     def minus_log_l(d):
         # get dists for one param set
         dists = distances.iloc[:,param_set]
@@ -158,8 +165,8 @@ def mle_t(args, distances, variances, num_variants):
         param_set = u
         if u%1000 == 0:
             print(f'Parameter set: {u}')
-        x_0 = [0.02,5]
-        res = minimize(minus_log_l,x_0,bounds=[(0,1),(2+1E-5,30)])
+        x_0 = init_vals
+        res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])])
         max_l_for_us.append(-res.fun)
         sigma_sqr_terms.append(res.x[0]**2)
         nu_terms.append(res.x[1])
@@ -168,8 +175,8 @@ def mle_t(args, distances, variances, num_variants):
     u_mle = max_l_for_us.index(max(max_l_for_us)) # param combination number
     # Use this parmeter set to get the model discrep term at that parameter set
     param_set = u_mle
-    x_0 = [0.02,5]
-    dec_vars = minimize(minus_log_l,x_0,bounds=[(0,1),(2+1E-5,30)]).x #val for model discrep term
+    x_0 = init_vals
+    dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])]).x #val for model discrep term
     sigma = dec_vars[0]
     sigma_sqr = sigma**2
     nu = dec_vars[1]
