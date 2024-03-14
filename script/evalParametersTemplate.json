@@ -16,5 +16,9 @@
         "smoke_emiss" : "Smoke Emissions",
         "smoke_diam": "Smoke Diameter"
     },
-    "stats_distribution_method": "Options are: (convolution,student-t,gaussian)"
+    "stats_distribution_method": "Options are: (convolution,student-t,gaussian)",
+    "MLE_optimization":{
+        "bounds": "Value bounds for the MLE optimizer i.e. [[1,2],[3,4]]",
+        "initial_vals":"Initial values for the MLE optimizer i.e. [1.5,3.5]"
+    }
 }
