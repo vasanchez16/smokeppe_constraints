@@ -18,3 +18,12 @@ OutputDir = /output/directory/
 ```
 
 See evalParametersTemplate.json for example of the contents of this json file.
+
+# Notes for MLE Optimization
+Including proper bounds for the optimization is very important for the algorithm to converge accurately.
+
+## Student-t approximation MLE
+The algorithm optimizes two values for the student-t approximation. The two decision variables are the third standard deviation term, $\delta_{MLE}$, and the degrees of freedom for the student-t distribution, $\nu$. The bounds for the optimization algorithm should be included in the .json file where the first set of bounds will correspond to $\delta_{MLE}$ and the second set of bounds will correspond to $\nu$.
+
+## Convolution
+Add notes here
