@@ -44,7 +44,7 @@ def FreqConfSet(args):
     title = 'Strict bounds implausibilities'
 
     my_input_df['colors'] = (my_input_df['implausibilities']>cv)
-    custom_cmap = ListedColormap(['red', 'blue'])
+    custom_cmap = ListedColormap(['blue', 'red'])
 
     for param in param_short_names:
         fig = plt.figure(facecolor='white',dpi=1200)
@@ -66,7 +66,7 @@ def FreqConfSet(args):
 
         plt.xlabel(param_dict[param], fontsize=8)
         plt.ylabel(r'$I(u^k)$', fontsize = 20)
-        plt.ylim([0,max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])])
+        plt.ylim([min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])])
         plt.legend()
 
         plt.savefig(save_figs_dir + param, dpi=300)
