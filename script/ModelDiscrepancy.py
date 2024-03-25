@@ -7,6 +7,7 @@ from src.inference.utils import save_dataset, get_em_pred_filenames
 def ModelDiscrepancy(args):
     """Collect datasets"""
 
+    print('---------ModelDiscrepancy---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 

@@ -53,6 +53,7 @@ def main(args):
         None
     """
     start_time = time.time()
+    runtime_hrs_lambda = lambda t: float(t / (60*60))
 
     """
     Some checks for code to work properly.
@@ -70,9 +71,13 @@ def main(args):
     Run pipelines
     """
     EmulatorEval(args)
+    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
     ModelDiscrepancy(args)
+    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
     MLE(args)
+    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
     Implausibilities(args)
+    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
     FreqConfSet(args)
 
 
@@ -81,7 +86,8 @@ def main(args):
     """
     end_time = time.time()
     during_time = end_time - start_time
-    print('run time:', float(during_time))
+    during_time = during_time/(60*60)
+    print(f'Total Runtime: {runtime_hrs_lambda(during_time)} hours')
     print('job successful')
     return
 

@@ -14,6 +14,8 @@ def EmulatorEval(args):
     input_file
     output_dir
     """
+
+    print('---------EmulatorEval---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 

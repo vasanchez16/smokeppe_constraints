@@ -13,6 +13,7 @@ def FreqConfSet(args):
     """
     Notes here
     """
+    print('---------FreqConfSet---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 
