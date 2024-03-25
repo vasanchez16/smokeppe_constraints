@@ -18,8 +18,6 @@ from scipy.special import gamma
 import argparse
 import configparser
 import time
-import sys
-import os
 import json
 
 # Add parent directory to sys.path
