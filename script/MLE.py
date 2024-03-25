@@ -9,6 +9,7 @@ def MLE(args):
     """
     Collect datasets
     """
+    print('---------MLE---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 
