@@ -27,7 +27,7 @@ sys.path.append(parent_dir)
 from EmulatorEval import EmulatorEval
 from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
-from src.inference.utils import set_up_directories, run_checks
+from src.inference.utils import set_up_directories, run_checks, save_eval_params_file
 
 # Config
 config = configparser.ConfigParser()
@@ -64,6 +64,10 @@ def main(args):
     """
     set_up_directories(args)
 
+    """
+    Save eval_params json file
+    """
+    save_eval_params_file(args)
 
     """
     Run pipelines

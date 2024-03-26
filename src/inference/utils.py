@@ -119,6 +119,16 @@ def set_up_directories(args):
         os.mkdir(args.output_dir + run_label + '/figures')
     return
 
+def save_eval_params_file(args):
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    run_label = eval_params['run_label']
+
+    with open(args.output_dir + run_label + '/evaluationParameters.json','w') as json_file:
+        json.dump(eval_params, json_file, indent=4)
+
+    return
+
 def get_em_pred_filenames(args):
     """
     getting sorted list of the em prediciton filenames
