@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import json
 
-def Implausibilities(args):
+def Implausibilities(args, my_distances, my_variances):
 
     print('---------Implausibilities---------')
 
@@ -20,10 +20,10 @@ def Implausibilities(args):
     mle_param_set_num = int(mle_df.iloc[0,0])
     additional_variance = mle_df['variance_mle'].values[0]
 
-    print('Reading in dists...')
-    my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
-    print('Reading in varis...')
-    my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
+    # print('Reading in dists...')
+    # my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
+    # print('Reading in varis...')
+    # my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
     my_variances_adjusted = my_variances + additional_variance
 
     # Calculate Impluasibility quantities for every parameter set

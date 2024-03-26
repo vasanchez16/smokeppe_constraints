@@ -5,7 +5,7 @@ from src.inference.utils import save_dataset, save_indexed_dataset
 from src.inference import approx_mle, mle_t
 import json
 
-def MLE(args):
+def MLE(args, my_distances, my_variances):
     """
     Collect datasets
     """
@@ -23,10 +23,10 @@ def MLE(args):
     inputs_df = pd.read_csv(inputs_file_path,index_col=0)
     num_variants = inputs_df.shape[0]
 
-    print('Reading in distances...')
-    my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
-    print('Reading in variances...')
-    my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
+    # print('Reading in distances...')
+    # my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
+    # print('Reading in variances...')
+    # my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
 
 
     """

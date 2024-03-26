@@ -41,4 +41,4 @@ def ModelDiscrepancy(args):
     save_dataset(all_vars_df, save_here_dir + 'variances.csv')
 
 
-    return
+    return all_dists_df, all_vars_df
