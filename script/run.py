@@ -25,9 +25,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
 from EmulatorEval import EmulatorEval
-from ModelDiscrepancy import ModelDiscrepancy
-from MLE import MLE
-from Implausibilities import Implausibilities
+from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
 from src.inference.utils import set_up_directories, run_checks
 
@@ -72,11 +70,7 @@ def main(args):
     """
     EmulatorEval(args)
     print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
-    ModelDiscrepancy(args)
-    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
-    MLE(args)
-    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
-    Implausibilities(args)
+    DisagreementQuantification(args)
     print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
     FreqConfSet(args)
 
