@@ -32,7 +32,7 @@ def Implausibilities(args, my_distances, my_variances):
     # Save Implausibility values
     implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=True)
 
-    best_param_set_num = implausibilities.sort_values(['0']).index[0]
+    best_param_set_num = implausibilities.sort_values([0]).index[0]
     save_this = pd.DataFrame([my_distances.iloc[:,best_param_set_num],my_variances.iloc[:,best_param_set_num]],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'bestDistsVaris.csv',index=False)
 
