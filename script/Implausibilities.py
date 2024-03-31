@@ -28,6 +28,7 @@ def Implausibilities(args, my_distances, my_variances):
 
     # Calculate Impluasibility quantities for every parameter set
     implausibilities = np.sqrt(np.power(my_distances, 2).div(my_variances_adjusted).sum(axis=0))
+    implausibilities = pd.DataFrame(implausibilities)
     # Save Implausibility values
     implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=True)
 
