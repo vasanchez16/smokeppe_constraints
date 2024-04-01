@@ -40,6 +40,9 @@ def FreqConfSet(args):
         cv = get_implaus_thresh_gaussian(args)
     print(f'Threshold for 95th percentile: {cv}')
     
+    save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
+    save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
+
     my_input_df = inputs_df.copy()
     my_input_df['implausibilities'] = implausibilites
     title = 'Strict bounds implausibilities'
