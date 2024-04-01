@@ -177,8 +177,7 @@ def mle_t(args, distances, variances, num_variants):
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
 
-    all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,nu_terms], index = ['L', 'sigma_sqr', 'nu']).transpose()
-    all_mle.get('L').apply(lambda x: x*-1)
+    all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,nu_terms], index = ['log_L', 'sigma_sqr', 'nu']).transpose()
     save_dataset(all_mle, save_here_dir + 'all_mle.csv')
 
     # Find parameter set that gives the max likelihood
