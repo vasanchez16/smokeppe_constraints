@@ -44,6 +44,26 @@ def EmulatorEval(args):
     my_obs_df = pd.read_csv(satellite_file_path,index_col=0)
     my_obs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
 
+    if toggle_filter:
+        plt.figure(figsize=(12,10))
+        ax = plt.subplot(111,projection=ccrs.PlateCarree())
+        ax.set_extent([-60,45,-45,15], crs=ccrs.PlateCarree())
+        plt.gca().coastlines()
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
+
+        rect1 = patches.Rectangle((lon_min, lat_min), 
+                                lon_max - lon_min, 
+                                lat_max - lat_min, 
+                                linestyle='--', edgecolor='red', facecolor='none', linewidth=4, label='Subregion'
+                                )
+        ax.add_patch(rect1)
+        gl.xlabel_style = {'fontsize':20}
+        gl.ylabel_style = {'fontsize':20}
+
+        plt.legend(prop={'size': 18})
+        plt.title('Subregion Filter', fontsize=30)
+        plt.savefig(save_here_dir + 'subregion.png', dpi=300)
+
     prediction_sets = get_em_pred_filenames(args)
 
     # Emulator Evaluation
@@ -53,6 +73,10 @@ def EmulatorEval(args):
     variances = []
 
     num_variants = inputs_df.shape[0]
+
+    if toggle_filter:
+        subregion_filt_idx_set = list((my_obs_df['latitude'] < lat_min) | (my_obs_df['longitude'] < lon_min) | (my_obs_df['latitude'] > lat_max) | (my_obs_df['longitude'] > lon_max))
+        my_obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
 
     my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
 
