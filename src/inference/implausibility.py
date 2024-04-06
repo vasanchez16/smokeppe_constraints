@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
+import scipy
 
 def get_implaus_thresh_conv(args):
     return
@@ -33,4 +34,16 @@ def get_implaus_thresh_t(args, num_points):
     return thresh
 
 def get_implaus_thresh_gaussian(args):
-    return
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+
+    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
+
+    thresh = np.sqrt(scipy.stats.chi2.ppf(0.95, sum((~obs_df.missing) & (~obs_df.outlier))))
+
+    return thresh
