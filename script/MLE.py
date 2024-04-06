@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize_scalar
 from src.inference.utils import save_dataset, save_indexed_dataset
-from src.inference import approx_mle, mle_t
+from src.inference import approx_mle, mle_t, mle_gauss
 import json
 
 def MLE(args, my_distances, my_variances):
@@ -37,7 +37,7 @@ def MLE(args, my_distances, my_variances):
     elif stats_dist_method == 'student-t':
         opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
     elif stats_dist_method == 'gaussian':
-        None
+        opt_vals,col_names = mle_gauss(args, my_distances, my_variances, num_variants)
         # add to this for gaussian if necessary
         # x_0,x_1,fun_val = approx_mle(my_distances, my_variances, num_variants, args.laplace)
 
