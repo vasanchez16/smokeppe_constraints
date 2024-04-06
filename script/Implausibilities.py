@@ -13,18 +13,18 @@ def Implausibilities(args, my_distances, my_variances):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
+    stats_dist_method = eval_params['stats_distribution_method']
 
     # Read in necessary statistics
     mle_df = pd.read_csv(save_here_dir + 'mle.csv',index_col=0)
 
     mle_param_set_num = int(mle_df.iloc[0,0])
     additional_variance = mle_df['variance_mle'].values[0]
-
-    # print('Reading in dists...')
-    # my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
-    # print('Reading in varis...')
-    # my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
     my_variances_adjusted = my_variances + additional_variance
+
+    if stats_dist_method == 'student-t':
+        nu_opt = float(mle_df['nu'])
+        my_variances_adjusted = my_variances_adjusted + ((nu_opt-2)/nu_opt)
 
     # Calculate Impluasibility quantities for every parameter set
     implausibilities = np.sqrt(np.power(my_distances, 2).div(my_variances_adjusted).sum(axis=0))
