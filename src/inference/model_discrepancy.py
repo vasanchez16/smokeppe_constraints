@@ -38,6 +38,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         # time is a datetime string in this case, but df here has time in hours as float
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
+        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
         num_pixels = len(my_obs_df_this_time.index)
 
         my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set , index_col=0)
