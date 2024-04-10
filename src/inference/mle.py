@@ -147,10 +147,14 @@ def mle_t(args, distances, variances, num_variants):
         # Log likelihood, to be maximized
         sigma_opt = d[0]
         nu_opt = d[1]
+        if len(init_vals) > 2:
+            epsilon = d[2]
+        else:
+            epsilon = 0
 
         coeff = scipy.special.gamma((nu_opt + 1) / 2) / (scipy.special.gamma(nu_opt/2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
 
-        factor2 = 1 + (dists**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+        factor2 = 1 + ((dists + epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
 
         f_t = coeff * factor2**(-1*(nu_opt+1)/2)
 
@@ -162,12 +166,17 @@ def mle_t(args, distances, variances, num_variants):
     max_l_for_us = []
     sigma_sqr_terms = []
     nu_terms = []
+    epsilon_terms = []
     for u in range(num_variants):
         param_set = u
         if u%20000 == 0:
             print(f'Parameter set: {u}')
         x_0 = init_vals
-        res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])])
+        if len(init_vals) > 2:
+            res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1]),tuple(bnds[2])])
+            epsilon_terms.append(res.x[2])
+        else:    
+            res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])])
         max_l_for_us.append(-res.fun)
         sigma_sqr_terms.append(res.x[0]**2)
         nu_terms.append(res.x[1])
@@ -177,7 +186,10 @@ def mle_t(args, distances, variances, num_variants):
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
 
-    all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,nu_terms], index = ['log_L', 'sigma_sqr', 'nu']).transpose()
+    if len(init_vals) > 2:
+        all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,nu_terms,epsilon_terms], index = ['log_L', 'sigma_sqr', 'nu', 'epsilon']).transpose()
+    else:
+        all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,nu_terms], index = ['log_L', 'sigma_sqr', 'nu']).transpose()
     save_dataset(all_mle, save_here_dir + 'all_mle.csv')
 
     # Find parameter set that gives the max likelihood
@@ -185,12 +197,20 @@ def mle_t(args, distances, variances, num_variants):
     # Use this parmeter set to get the model discrep term at that parameter set
     param_set = u_mle
     x_0 = init_vals
-    dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])]).x #val for model discrep term
+    if len(init_vals) > 2:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1]),tuple(bnds[2])]).x #val for model discrep term
+    else:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])]).x #val for model discrep term
     sigma = dec_vars[0]
     sigma_sqr = sigma**2
     nu = dec_vars[1]
     column_names = ['parameter_set_num', 'variance_mle', 'nu']
     optimized_vals = [u_mle, sigma_sqr, nu]
+
+    if len(init_vals) > 2:
+        epsilon = dec_vars[2]
+        column_names = column_names + ['epsilon']
+        optimized_vals = optimized_vals + [epsilon]
 
     return optimized_vals, column_names
 
@@ -207,27 +227,40 @@ def mle_gauss(args, distances, variances, num_variants):
     
     # Define function to be used in minimize scalar
     def minus_log_l(d):
+        sigma_opt = d[0]
+        if len(init_vals) > 1:
+            epsilon = d[1]
+        else:
+            epsilon = 0
         # get dists for one param set
         dists = distances.iloc[:,param_set]
         varis = variances.iloc[:,param_set]
         # Log likelihood, to be maximized
-        term1 = np.nansum(np.log(varis + d**2)) #get all the gspts for emulation variant
-        term2 = np.nansum(np.power(dists, 2) / (varis + d**2))
+        term1 = np.nansum(np.log(varis + sigma_opt**2)) #get all the gspts for emulation variant
+        term2 = np.nansum(np.power(dists + epsilon, 2) / (varis + sigma_opt**2))
         return 0.5 * (term1 + term2)
 
     # Run minimize scalar for each parameter set
     max_l_for_us = []
     sigma_sqr_terms = []
+    epsilon_terms = []
     for u in range(num_variants):
         param_set = u
         if u%20000 == 0:
             print(f'Parameter set: {u}')
         x_0 = init_vals
-        res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])])
+        if len(init_vals) > 1:
+            res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])])
+            epsilon_terms.append(res.x[1])
+        else:
+            res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])])
         max_l_for_us.append(-res.fun)
         sigma_sqr_terms.append(res.x[0]**2)
 
-    all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms], index = ['log_L', 'sigma_sqr']).transpose()
+    if len(init_vals) > 1:
+        all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,epsilon_terms], index = ['log_L', 'sigma_sqr', 'epsilon']).transpose()
+    else:
+        all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms], index = ['log_L', 'sigma_sqr']).transpose()
     save_dataset(all_mle, save_here_dir + 'all_mle.csv')
 
     # Find parameter set that gives the max likelihood
@@ -235,10 +268,19 @@ def mle_gauss(args, distances, variances, num_variants):
     # Use this parmeter set to get the model discrep term at that parameter set
     param_set = u_mle
     x_0 = init_vals
-    dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])]).x #val for model discrep term
+    if len(init_vals) > 1:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])]).x #val for model discrep term
+    else:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])]).x #val for model discrep term
+
     sigma = dec_vars[0]
     sigma_sqr = sigma**2
     column_names = ['parameter_set_num', 'variance_mle']
     optimized_vals = [u_mle, sigma_sqr]
+
+    if len(init_vals) > 1:
+        epsilon = dec_vars[1]
+        column_names = column_names + ['epsilon']
+        optimized_vals = optimized_vals + [epsilon]
 
     return optimized_vals, column_names
