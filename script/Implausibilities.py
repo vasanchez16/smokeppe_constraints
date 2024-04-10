@@ -24,7 +24,10 @@ def Implausibilities(args, my_distances, my_variances):
 
     if stats_dist_method == 'student-t':
         nu_opt = float(mle_df['nu'])
-        my_variances_adjusted = my_variances_adjusted + ((nu_opt-2)/nu_opt)
+        my_variances_adjusted = my_variances_adjusted * ((nu_opt-2)/nu_opt)
+
+    if 'epsilon' in mle_df.columns:
+        my_distances = my_distances + float(mle_df['epsilon'])
 
     # Calculate Impluasibility quantities for every parameter set
     implausibilities = np.sqrt(np.power(my_distances, 2).div(my_variances_adjusted).sum(axis=0))
