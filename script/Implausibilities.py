@@ -37,6 +37,9 @@ def Implausibilities(args, my_distances, my_variances):
 
     best_param_set_num = implausibilities.sort_values([0]).index[0]
     save_this = pd.DataFrame([my_distances.iloc[:,best_param_set_num],my_variances.iloc[:,best_param_set_num]],index=['dists','varis']).transpose()
-    save_this.to_csv(save_here_dir + 'bestDistsVaris.csv',index=False)
+    save_this.to_csv(save_here_dir + 'mostPlausibleDistsVaris.csv',index=False)
+    save_this = pd.DataFrame([my_distances.iloc[:,mle_param_set_num],my_variances.iloc[:,mle_param_set_num]],index=['dists','varis']).transpose()
+    save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
+
 
     return
