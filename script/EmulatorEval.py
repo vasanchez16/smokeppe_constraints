@@ -39,10 +39,10 @@ def EmulatorEval(args):
     lon_max = subregion_filter['lon_max']
 
     # Import input emulator parameter combinations
-    inputs_df = pd.read_csv(inputs_file_path,index_col=0)
+    inputs_df = pd.read_csv(inputs_file_path)
 
     # Import MODIS observations dataframe
-    my_obs_df = pd.read_csv(satellite_file_path,index_col=0)
+    my_obs_df = pd.read_csv(satellite_file_path)
     my_obs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
 
     snip_subregion_obs = my_obs_df[my_obs_df['time'] == np.unique(my_obs_df['time'])[0]]
@@ -100,7 +100,7 @@ def EmulatorEval(args):
         num_pixels = len(my_obs_df_this_time.index) # give the number of lat_long points for one time
         
         #need to make df of prediction outputs for each day
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set, index_col=0) ###
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set) ###
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'],inplace=True, ignore_index=True)
         
         #makes a list of df's, each df represents a different gstp

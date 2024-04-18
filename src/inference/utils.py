@@ -93,7 +93,7 @@ def save_dataset(data, save_path):
     save_path: str
     Path where this data will be saved
     """
-    data.to_csv(save_path)
+    data.to_csv(save_path, index=False)
     return
 
 def save_indexed_dataset():

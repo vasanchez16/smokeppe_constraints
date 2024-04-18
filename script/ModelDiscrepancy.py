@@ -20,11 +20,11 @@ def ModelDiscrepancy(args):
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
     # Import input emulator parameter combinations
-    inputs_df = pd.read_csv(inputs_file_path,index_col=0) ###
+    inputs_df = pd.read_csv(inputs_file_path) ###
     num_variants = inputs_df.shape[0]
 
     # Import MODIS observations dataframe
-    obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
+    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
 
     prediction_sets = get_em_pred_filenames(args)
 

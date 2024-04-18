@@ -20,7 +20,7 @@ def MLE(args, my_distances, my_variances):
 
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
-    inputs_df = pd.read_csv(inputs_file_path,index_col=0)
+    inputs_df = pd.read_csv(inputs_file_path)
     num_variants = inputs_df.shape[0]
 
     # print('Reading in distances...')

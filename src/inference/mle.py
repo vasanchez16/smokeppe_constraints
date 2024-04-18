@@ -284,3 +284,71 @@ def mle_gauss(args, distances, variances, num_variants):
         optimized_vals = optimized_vals + [epsilon]
 
     return optimized_vals, column_names
+
+def mle_laplace(args, distances, variances, num_variants):
+    '''
+    Estimate distribution parameters under the assumption the data lies along a laplace distribution.
+    '''
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+
+    bnds = eval_params['MLE_optimization']['bounds']
+    init_vals = eval_params['MLE_optimization']['initial_vals']
+
+    # minimize this function
+    def minus_log_L(d):
+
+        sigma = d[0]
+
+        dists = distances.iloc[:,param_set]
+        varis = variances.iloc[:,param_set]
+
+        b = np.sqrt((varis + sigma**2) / 2)
+        f_L = (1 / (2*b)) * np.exp(-1 * (dists / b))
+
+        log_Li = np.log(f_L)
+        log_likelihood = np.nansum(log_Li)
+
+        return -1 * log_likelihood
+    
+
+    # Run minimize scalar for each parameter set
+    max_l_for_us = []
+    sigma_sqr_terms = []
+    b_terms = []
+    for u in range(num_variants):
+        # get the parameter set number
+        param_set = u
+        # run minimize function
+        x_0 = init_vals
+        res = minimize(minus_log_L,x_0,bounds=[tuple(bnds[0])])
+        max_l_for_us.append(-res.fun)
+        sigma_sqr_terms.append(res.x[0]**2)
+        
+        b_terms.append(b_here)
+
+
+    all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms], index = ['log_L', 'sigma_sqr']).transpose()
+    save_dataset(all_mle, save_here_dir + 'all_mle.csv')
+
+    # Find parameter set that gives the max likelihood
+    u_mle = max_l_for_us.index(max(max_l_for_us)) # param combination number
+    # Use this parmeter set to get the model discrep term at that parameter set
+    param_set = u_mle
+    x_0 = init_vals
+    if len(init_vals) > 1:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])]).x #val for model discrep term
+    else:
+        dec_vars = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])]).x #val for model discrep term
+
+    sigma = dec_vars[0]
+    sigma_sqr = sigma**2
+    column_names = ['parameter_set_num', 'variance_mle']
+    optimized_vals = [u_mle, sigma_sqr]
+
+    if len(init_vals) > 1:
+        epsilon = dec_vars[1]
+        column_names = column_names + ['epsilon']
+        optimized_vals = optimized_vals + [epsilon]

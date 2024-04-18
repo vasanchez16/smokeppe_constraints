@@ -25,9 +25,15 @@ def FreqConfSet(args):
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
 
-    implausibilites = pd.read_csv(save_here_dir + 'implausibilities.csv', index_col=0)
-    inputs_df = pd.read_csv(inputs_file_path, index_col=0)
-    obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
+    implausibilites = pd.read_csv(save_here_dir + 'implausibilities.csv')
+    inputs_df = pd.read_csv(inputs_file_path)
+    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
+
+    try:
+        inputs_df.drop(columns=['Unnamed: 0'], inplace=True)
+    except:
+        None
+
     param_short_names = list(inputs_df.columns)
     
     num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])

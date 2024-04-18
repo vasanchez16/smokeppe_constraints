@@ -32,7 +32,7 @@ def EmulatorEvalVis(args):
     save_figs_dir = save_here_dir + 'figures/'
     ls_thresh = eval_params['leastSquaresThreshold']
 
-    outs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
+    outs_df = pd.read_csv(save_here_dir + 'outliers.csv')
     outs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
     # outs_df.loc[outs_df['outlier'], ['leastSquares']] = float('nan')
 

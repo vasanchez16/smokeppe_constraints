@@ -16,9 +16,9 @@ def Implausibilities(args, my_distances, my_variances):
     stats_dist_method = eval_params['stats_distribution_method']
 
     # Read in necessary statistics
-    mle_df = pd.read_csv(save_here_dir + 'mle.csv',index_col=0)
+    mle_df = pd.read_csv(save_here_dir + 'mle.csv')
 
-    mle_param_set_num = int(mle_df.iloc[0,0])
+    mle_param_set_num = int(mle_df['parameter_set_num'])
     additional_variance = mle_df['variance_mle'].values[0]
     my_variances_adjusted = my_variances + additional_variance
 

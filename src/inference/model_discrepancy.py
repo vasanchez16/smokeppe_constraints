@@ -41,7 +41,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
         num_pixels = len(my_obs_df_this_time.index)
 
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set , index_col=0)
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
         print(f'Read in {prediction_set}')
