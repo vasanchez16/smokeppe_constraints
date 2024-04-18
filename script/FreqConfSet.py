@@ -56,15 +56,20 @@ def FreqConfSet(args):
     my_input_df['colors'] = (my_input_df['implausibilities']>cv)
     custom_cmap = ListedColormap(['blue', 'red'])
 
+    markersize_here = 1
+    if num_points < 50000:
+        markersize_here = 0.1
+    else:
+        markersize_here = 0.01
+
     for param in param_short_names:
         fig = plt.figure(facecolor='white',dpi=1200)
         
-
         plt.scatter(
             my_input_df[param],
             my_input_df['implausibilities'],
             alpha=1,
-            s=0.01,
+            s=markersize_here,
             c=my_input_df['colors'],
             cmap=custom_cmap
         )
