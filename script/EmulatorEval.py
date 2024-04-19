@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 import json
 from src.inference.utils import get_em_pred_filenames
+from tqdm import tqdm
 
 
 def EmulatorEval(args):
@@ -93,9 +94,9 @@ def EmulatorEval(args):
         my_obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
 
     my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
-
+    progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
-        print(tm,prediction_set)
+        # print(tm,prediction_set)
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
         num_pixels = len(my_obs_df_this_time.index) # give the number of lat_long points for one time
         
@@ -129,8 +130,9 @@ def EmulatorEval(args):
             else:
                 distances.append(float("nan"))
                 variances.append(float("nan"))
-        print(f'{prediction_set} completed.')
-
+        # print(f'{prediction_set} completed.')
+        progress_bar.update(1)
+    progress_bar.close()
     leastSqs = [np.abs(distances[k]) / np.sqrt(variances[k]) for k in range(len(distances))]
 
 
