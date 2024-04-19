@@ -17,12 +17,13 @@ def EmulatorEval(args):
     output_dir
     """
 
-    print('---------EmulatorEval---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 
     # Extract evaluation parameters
     run_label = eval_params['run_label']
+    print(f'Run label: {run_label}')
+    print('---------EmulatorEval---------')
     save_here_dir = args.output_dir + run_label + '/'
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
