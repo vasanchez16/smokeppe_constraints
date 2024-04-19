@@ -37,7 +37,9 @@ def ModelDiscrepancy(args):
     """
     Save datasets
     """
+    print('Saving distances.csv...')
     save_dataset(all_dists_df, save_here_dir + 'distances.csv')
+    print('Saving variances.csv...')
     save_dataset(all_vars_df, save_here_dir + 'variances.csv')
 
 

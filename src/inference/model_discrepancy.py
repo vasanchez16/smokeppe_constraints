@@ -73,10 +73,9 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         progress_bar.update(1)
     progress_bar.close()
 
-    print('Concatenating dists...')
+    print('Concatenating distances...')
     all_dists_df = pd.concat(allDistances, axis=0).reset_index(drop=True)
-    print('Concatenating Varis...')
+    print('Concatenating variances...')
     all_vars_df = pd.concat(allVariances, axis=0).reset_index(drop=True)
-    print('saving dists...')
 
     return all_dists_df, all_vars_df
