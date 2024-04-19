@@ -24,3 +24,12 @@ def save_dataset(dataset, filename):
 def save_indexed_dataset(dataset, index, filename):
     dataset = dataset.iloc[:index]
     save_dataset(dataset, filename)
+
+def formatRuntime(seconds):
+    hrs = seconds / (60*60)
+    roundHrs = int(hrs)
+    minutes = hrs - roundHrs
+    minutes = minutes * 60
+    roundMinutes = round(minutes,2)
+    
+    return [roundHrs , roundMinutes]

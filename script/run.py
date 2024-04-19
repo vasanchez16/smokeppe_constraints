@@ -28,6 +28,7 @@ from EmulatorEval import EmulatorEval
 from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
 from src.inference.utils import set_up_directories, run_checks, save_eval_params_file
+from src.storage.utils import formatRuntime
 
 # Config
 config = configparser.ConfigParser()
@@ -73,19 +74,19 @@ def main(args):
     Run pipelines
     """
     EmulatorEval(args)
-    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
+    timeNow = time.time() - start_time
+    print(f'Current Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
     DisagreementQuantification(args)
-    print(f'Current Runtime: {runtime_hrs_lambda(time.time()-start_time)} hours')
+    timeNow = time.time() - start_time
+    print(f'Current Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
     FreqConfSet(args)
 
 
     """
     Runtime report
     """
-    end_time = time.time()
-    during_time = end_time - start_time
-    during_time = during_time/(60*60)
-    print(f'Total Runtime: {runtime_hrs_lambda(during_time)} hours')
+    timeNow = time.time() - start_time
+    print(f'Total Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
     print('job successful')
     return
 

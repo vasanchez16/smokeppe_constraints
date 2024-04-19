@@ -4,19 +4,22 @@ from ModelDiscrepancy import ModelDiscrepancy
 from MLE import MLE
 from Implausibilities import Implausibilities
 import time
+from src.storage.utils import formatRuntime
 
 def DisagreementQuantification(args):
 
     print('---------DisagreementQuantification---------')
 
     DQ_start_time = time.time()
-    runtime_hrs_lambda = lambda t: float(t / (60*60))
 
     distances, variances = ModelDiscrepancy(args)
-    print(f'DQ Runtime: {runtime_hrs_lambda(time.time()-DQ_start_time)} hours')
+    timeNow = time.time() - DQ_start_time
+    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
     MLE(args, distances, variances)
-    print(f'DQ Runtime: {runtime_hrs_lambda(time.time()-DQ_start_time)} hours')
+    timeNow = time.time() - DQ_start_time
+    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
     Implausibilities(args, distances, variances)
-    print(f'DQ Runtime: {runtime_hrs_lambda(time.time()-DQ_start_time)} hours')
+    timeNow = time.time() - DQ_start_time
+    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
 
     return None
