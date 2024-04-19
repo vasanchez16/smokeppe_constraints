@@ -33,7 +33,7 @@ def Implausibilities(args, my_distances, my_variances):
     implausibilities = np.sqrt(np.power(my_distances, 2).div(my_variances_adjusted).sum(axis=0))
     implausibilities = pd.DataFrame(implausibilities)
     # Save Implausibility values
-    implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=True)
+    implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=False)
 
     best_param_set_num = implausibilities.sort_values([0]).index[0]
     save_this = pd.DataFrame([my_distances.iloc[:,best_param_set_num],my_variances.iloc[:,best_param_set_num]],index=['dists','varis']).transpose()
