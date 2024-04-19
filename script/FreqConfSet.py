@@ -44,7 +44,7 @@ def FreqConfSet(args):
         cv = get_implaus_thresh_t(args,num_points)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gaussian(args)
-    print(f'Threshold for 95th percentile: {cv}')
+    print(f'Threshold for 95th percentile: {round(cv,2)}')
     
     save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
     save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
