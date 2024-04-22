@@ -94,7 +94,7 @@ def EmulatorEval(args):
         subregion_filt_idx_set = list((my_obs_df['latitude'] < lat_min) | (my_obs_df['longitude'] < lon_min) | (my_obs_df['latitude'] > lat_max) | (my_obs_df['longitude'] > lon_max))
         my_obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
 
-    my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
+    # my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         # print(tm,prediction_set)
