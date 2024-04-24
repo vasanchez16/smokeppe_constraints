@@ -10,6 +10,7 @@ from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
 
 from src.emulator.evaluate import evaluate
+from src.model_discrepancy.model_discrepancy import model_discrepancy
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -52,15 +53,25 @@ def main(args):
     print(runtime(time.time() - start_time))
 
     """
-    Compute implausibilities
+    2-3. Estimate the noise model
     """
-    DisagreementQuantification(args)
+    distances, variances = model_discrepancy(args)
+    print(runtime(time.time() - start_time))
+
+    MLE(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
-    Compute confidence sets
+    4. Compute implausibilities
+    """
+    Implausibilities(args, distances, variances)
+    print(runtime(time.time() - start_time))
+
+    """
+    5. Compute confidence sets
     """
     FreqConfSet(args)
+    print(runtime(time.time() - start_time))
 
     """
     Runtime report

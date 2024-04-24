@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 import json
-from src.inference import calculate_distances_and_variances
-from src.inference.utils import save_dataset, get_em_pred_filenames
+from .utils import calculate_distances_and_variances
+from src.storage.utils import save_dataset, get_em_pred_filenames
 
-def ModelDiscrepancy(args):
+
+def model_discrepancy(args):
     """Collect datasets"""
 
     print('---------ModelDiscrepancy---------')
