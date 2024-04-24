@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize_scalar
-from src.inference.utils import save_dataset, save_indexed_dataset
-from src.inference import approx_mle, mle_t, mle_gauss
+from src.storage.utils import save_dataset, save_indexed_dataset
+from .gauss import mle_gauss
+from .student_t import mle_t
 import json
 
-def MLE(args, my_distances, my_variances):
+
+def mle(args, my_distances, my_variances):
     """
     Collect datasets
     """

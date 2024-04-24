@@ -11,6 +11,7 @@ from FreqConfSet import FreqConfSet
 
 from src.emulator.evaluate import evaluate
 from src.model_discrepancy.model_discrepancy import model_discrepancy
+from src.inference.mle import mle
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -58,7 +59,7 @@ def main(args):
     distances, variances = model_discrepancy(args)
     print(runtime(time.time() - start_time))
 
-    MLE(args, distances, variances)
+    mle(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
