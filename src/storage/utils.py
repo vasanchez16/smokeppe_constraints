@@ -47,20 +47,6 @@ def save_eval_params_file(args):
 
     return
 
-def get_em_pred_filenames(args):
-    """
-    getting sorted list of the em prediciton filenames
-    """
-
-    with open(args.input_file,'r') as file:
-        eval_params = json.load(file)
-    emulator_folder_path = eval_params['emulator_output_folder_path']
-
-    folder_contents = os.listdir(emulator_folder_path)
-    folder_contents.sort()
-
-    return folder_contents
-
 def run_checks(args):
     
     with open(args.input_file,'r') as file:

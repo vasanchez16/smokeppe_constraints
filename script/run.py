@@ -6,9 +6,10 @@ import os
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
-from EmulatorEval import EmulatorEval
 from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
+
+from src.emulator.evaluate import evaluate
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -37,25 +38,17 @@ def main(args):
     """
     start_time = time.time()
 
-    """
-    Some checks for code to work properly.
-    """
+    # Set-up
     run_checks(args)
-    
-    """
-    Set up directories
-    """
     set_up_directories(args)
-
-    """
-    Save eval_params json file
-    """
     save_eval_params_file(args)
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
 
     """
-    Evaluate the emulator
+    1. Evaluate the emulator
     """
-    EmulatorEval(args)
+    evaluate(args)
     print(runtime(time.time() - start_time))
 
     """
