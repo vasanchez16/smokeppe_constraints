@@ -31,7 +31,7 @@ config.ini
 !evalParametersTemplate.json
 
 # slurm batches
-run_all.sh
+*.sh
 # slurm output files
 *.out
 
