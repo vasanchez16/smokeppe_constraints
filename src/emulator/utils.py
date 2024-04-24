@@ -1,5 +1,8 @@
 import os
 import json
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
 
 
 def get_em_pred_filenames(args):
@@ -17,7 +20,7 @@ def get_em_pred_filenames(args):
     return folder_contents
 
 
-def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max, lon_max, obsSdCensor, prediction_sets, ls_thresh, save_here_dir):
+def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max, lon_max, obsSdCensor, prediction_sets, ls_thresh, save_here_dir, emulator_folder_path):
     # making empty data storage lists for last calculations
     which_gets_least_squares = []
     distances = []

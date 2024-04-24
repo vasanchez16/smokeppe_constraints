@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import json
 from .utils import calculate_distances_and_variances
-from src.storage.utils import save_dataset, get_em_pred_filenames
+from src.storage.utils import save_dataset
+from src.emulator.utils import get_em_pred_filenames
 
 
 def model_discrepancy(args):

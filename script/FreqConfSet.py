@@ -7,7 +7,7 @@ import math
 from matplotlib.colors import ListedColormap
 import os
 import json
-from src.inference.implausibility import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gaussian
+from src.mle.implausibility import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gaussian
 
 def FreqConfSet(args):
     """

@@ -3,15 +3,16 @@ import configparser
 import time
 import sys
 import os
+import json
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
-from DisagreementQuantification import DisagreementQuantification
 from FreqConfSet import FreqConfSet
+from Implausibilities import Implausibilities
 
 from src.emulator.evaluate import evaluate
 from src.model_discrepancy.model_discrepancy import model_discrepancy
-from src.inference.mle import mle
+from src.mle.mle import mle
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -54,11 +55,14 @@ def main(args):
     print(runtime(time.time() - start_time))
 
     """
-    2-3. Estimate the noise model
+    2. Estimate model discrepancy
     """
     distances, variances = model_discrepancy(args)
     print(runtime(time.time() - start_time))
 
+    """
+    3. Compute MLE
+    """
     mle(args, distances, variances)
     print(runtime(time.time() - start_time))
 

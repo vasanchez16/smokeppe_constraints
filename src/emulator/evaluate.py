@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 import os
 from datetime import datetime
 import json
-from .utils import get_em_pred_filenames
+from .utils import get_em_pred_filenames, get_distances
 from .viz import plot_measurements, plot_outliers
 from tqdm import tqdm
 
@@ -66,7 +66,8 @@ def evaluate(args):
                                                    obsSdCensor,
                                                    prediction_sets,
                                                    ls_thresh,
-                                                   save_here_dir)
+                                                   save_here_dir,
+                                                   emulator_folder_path)
 
     #Here is where the sorting becomes very important as the distances and variances append to the incorrect corresponding gstp
     outliers_df = my_obs_df

@@ -70,5 +70,4 @@ def run_checks(args):
 def runtime(seconds):
     hrs = int(seconds / (60*60))
     minutes = int((seconds % (60*60)) / 60)
-    return f'Current Runtime: {runtime(timeNow)[0]} hours {runtime(timeNow)[1]}\
-        minutes'
+    return f'Current Runtime: {hrs} hours {minutes} minutes'
