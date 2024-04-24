@@ -3,8 +3,9 @@ import numpy as np
 import json
 import scipy
 
+
 def get_implaus_thresh_conv(args):
-    return
+    raise NotImplementedError
 
 def get_implaus_thresh_t(args, num_points):
     """

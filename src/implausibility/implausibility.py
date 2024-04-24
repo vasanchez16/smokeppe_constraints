@@ -3,7 +3,8 @@ import pandas as pd
 import os
 import json
 
-def Implausibilities(args, my_distances, my_variances):
+
+def implausibilities(args, my_distances, my_variances):
 
     print('---------Implausibilities---------')
 
@@ -40,6 +41,4 @@ def Implausibilities(args, my_distances, my_variances):
     save_this.to_csv(save_here_dir + 'mostPlausibleDistsVaris.csv',index=False)
     save_this = pd.DataFrame([my_distances.iloc[:,mle_param_set_num],my_variances.iloc[:,mle_param_set_num]],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
-
-
     return

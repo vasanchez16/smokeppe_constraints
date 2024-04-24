@@ -7,12 +7,12 @@ import json
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
-from FreqConfSet import FreqConfSet
-from Implausibilities import Implausibilities
 
 from src.emulator.evaluate import evaluate
 from src.model_discrepancy.model_discrepancy import model_discrepancy
 from src.mle.mle import mle
+from src.implausibility.implausibility import implausibilities
+from src.confidence.frequentist_confidence_set import frequentist_confidence_set
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -69,20 +69,18 @@ def main(args):
     """
     4. Compute implausibilities
     """
-    Implausibilities(args, distances, variances)
+    implausibilities(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
     5. Compute confidence sets
     """
-    FreqConfSet(args)
+    frequentist_confidence_set(args)
     print(runtime(time.time() - start_time))
 
     """
     Runtime report
     """
-    timeNow = time.time() - start_time
-    print(runtime(timeNow))
     print('job successful')
     return
 
