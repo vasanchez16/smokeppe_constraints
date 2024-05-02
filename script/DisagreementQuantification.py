@@ -4,7 +4,8 @@ from ModelDiscrepancy import ModelDiscrepancy
 from MLE import MLE
 from Implausibilities import Implausibilities
 import time
-from src.storage.utils import formatRuntime
+
+from src.storage.utils import runtime
 
 def DisagreementQuantification(args):
 
@@ -14,12 +15,12 @@ def DisagreementQuantification(args):
 
     distances, variances = ModelDiscrepancy(args)
     timeNow = time.time() - DQ_start_time
-    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
+    print(f'DQ Runtime: ' + runtime(timeNow))
     MLE(args, distances, variances)
     timeNow = time.time() - DQ_start_time
-    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
+    print(f'DQ Runtime: ' + runtime(timeNow))
     Implausibilities(args, distances, variances)
     timeNow = time.time() - DQ_start_time
-    print(f'DQ Runtime: {formatRuntime(timeNow)[0]} hours {formatRuntime(timeNow)[1]} minutes')
+    print(f'DQ Runtime: ' + runtime(timeNow))
 
     return None
