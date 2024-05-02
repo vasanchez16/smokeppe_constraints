@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 import os
 from datetime import datetime
 import json
-from src.inference.utils import get_em_pred_filenames
+from src.storage.utils import get_em_pred_filenames
 from tqdm import tqdm
 
 
