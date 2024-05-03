@@ -63,10 +63,7 @@ def evaluate(args):
                                                    lon_min,
                                                    lat_max,
                                                    lon_max,
-                                                   obsSdCensor,
                                                    prediction_sets,
-                                                   ls_thresh,
-                                                   save_here_dir,
                                                    emulator_folder_path)
 
     #Here is where the sorting becomes very important as the distances and variances append to the incorrect corresponding gstp

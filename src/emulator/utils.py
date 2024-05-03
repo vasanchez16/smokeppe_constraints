@@ -20,7 +20,7 @@ def get_em_pred_filenames(args):
     return folder_contents
 
 
-def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max, lon_max, obsSdCensor, prediction_sets, ls_thresh, save_here_dir, emulator_folder_path):
+def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max, lon_max, prediction_sets, emulator_folder_path):
     # making empty data storage lists for last calculations
     which_gets_least_squares = []
     distances = []
@@ -32,7 +32,6 @@ def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max
         subregion_filt_idx_set = list((my_obs_df['latitude'] < lat_min) | (my_obs_df['longitude'] < lon_min) | (my_obs_df['latitude'] > lat_max) | (my_obs_df['longitude'] > lon_max))
         my_obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
 
-    # my_obs_df.loc[my_obs_df.sdResponse >= obsSdCensor, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         # print(tm,prediction_set)
