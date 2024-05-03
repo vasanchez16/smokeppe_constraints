@@ -48,7 +48,7 @@ def plot_measurements(lon_min,
 
     plt.legend(prop={'size': 18}, loc=1)
     plt.title('Subregion Filter', fontsize=30)
-    plt.savefig(save_here_dir + 'subregion.png', dpi=300)
+    plt.savefig(save_here_dir + 'general_figures/' + 'subregion.png', dpi=300)
     return
 
 
@@ -85,7 +85,7 @@ def plot_outliers(outliers_df, ls_thresh, save_here_dir):
     # Labels
     plt.xlabel('Minimum Least Squares Value for Each Surrogate Model', fontsize=14)
     plt.ylabel('Number of Occurences', fontsize=14)
-    plt.savefig(save_here_dir + 'outliersFig', dpi = 300)
+    plt.savefig(save_here_dir + 'general_figures/' + 'outliersFig', dpi = 300)
     return
 
 def emulator_eval_vis(args):
@@ -102,9 +102,6 @@ def emulator_eval_vis(args):
 
     outs_df = pd.read_csv(save_here_dir + 'outliers.csv')
     outs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
-
-    if not os.path.exists(save_here_dir + 'movieFigs/'):
-        os.mkdir(save_here_dir + 'movieFigs/')
 
     file_num = 0
     progress_bar = tqdm(total=len(np.unique(outs_df['time'])), desc="Progress")
@@ -138,7 +135,7 @@ def emulator_eval_vis(args):
             c = outs_now['leastSquares'],
             cmap = 'hot_r',
             edgecolor = 'black',
-            vmax = np.nanpercentile(outs_df['leastSquares'],99.9)
+            vmax = np.nanpercentile(outs_df['leastSquares'],99)
         )
         cbar = plt.colorbar()
 
@@ -171,7 +168,7 @@ def emulator_eval_vis(args):
 
         plt.title(time_now)
 
-        plt.savefig(save_here_dir + 'movieFigs/' + f'outlierfig{file_num}.png',format='png')
+        plt.savefig(save_here_dir + 'general_figures/movie_pngs/' + f'outlierfig{file_num}.png',format='png')
         plt.cla()
         plt.clf()
         plt.close(fig)
@@ -182,6 +179,6 @@ def emulator_eval_vis(args):
     # make mp4 file
     frames = []
     for i in range(file_num):
-        frames.append(imageio.imread(save_here_dir + 'movieFigs/' + f'outlierfig{i}.png'))
+        frames.append(imageio.imread(save_here_dir + 'general_figures/movie_pngs/' + f'outlierfig{i}.png'))
     print('Saving mp4 file...')
-    imageio.mimsave(save_here_dir + 'outliersVis' + '.mp4', frames, fps=5)
+    imageio.mimsave(save_here_dir + 'general_figures/outliersVis' + '.mp4', frames, fps=5)

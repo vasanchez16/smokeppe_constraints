@@ -21,7 +21,7 @@ def frequentist_confidence_set(args):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
-    save_figs_dir = save_here_dir + 'figures/'
+    save_implaus_figs_dir = save_here_dir + 'implaus_figures/'
     inputs_file_path = eval_params['emulator_inputs_file_path']
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
@@ -85,7 +85,7 @@ def frequentist_confidence_set(args):
         plt.ylim([min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])])
         plt.legend()
 
-        plt.savefig(save_figs_dir + param, dpi=300)
+        plt.savefig(save_implaus_figs_dir + param, dpi=300)
         plt.cla()
         plt.clf()
         plt.close(fig)

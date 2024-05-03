@@ -32,8 +32,14 @@ def set_up_directories(args):
     if not os.path.exists(args.output_dir + run_label):
         os.mkdir(args.output_dir + run_label)
 
-    if not os.path.exists(args.output_dir + run_label + '/figures'):
-        os.mkdir(args.output_dir + run_label + '/figures')
+    if not os.path.exists(args.output_dir + run_label + '/implaus_figures'):
+        os.mkdir(args.output_dir + run_label + '/implaus_figures')
+
+    if not os.path.exists(args.output_dir + run_label + '/general_figures'):
+        os.mkdir(args.output_dir + run_label + '/general_figures')
+    
+    if not os.path.exists(args.output_dir + run_label + '/general_figures/movie_pngs'):
+        os.mkdir(args.output_dir + run_label + '/general_figures/movie_pngs')
 
     return
 
