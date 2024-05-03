@@ -25,7 +25,6 @@ def evaluate(args):
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
-    obsSdCensor = eval_params['obsSdCensor']
     ls_thresh = eval_params['leastSquaresThreshold']
     inputs_file_path = eval_params['emulator_inputs_file_path']
     subregion_filter = eval_params['subregion_filter']
