@@ -58,7 +58,7 @@ def run_checks(args):
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 
-    possible_methods = ['convolution','student-t','gaussian']
+    possible_methods = ['convolution','student-t','gaussian','student-t_bootstrap_pivotal','student-t_bootstrap_nonpivotal']
     if not (eval_params['stats_distribution_method'] in possible_methods):
         raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
 
