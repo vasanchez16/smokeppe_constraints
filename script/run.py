@@ -77,7 +77,7 @@ def main(args):
     """
     5. Compute confidence sets
     """
-    frequentist_confidence_set(args)
+    frequentist_confidence_set(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
