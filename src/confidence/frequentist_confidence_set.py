@@ -7,8 +7,12 @@ import math
 from matplotlib.colors import ListedColormap
 import os
 import json
-from .utils import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gaussian
-from src.bootstrap.student_t_boot import get_implaus_thresh_t_boot_nonpivotal, get_implaus_thresh_t_boot_pivotal
+from .utils import (get_implaus_thresh_t, 
+                    get_implaus_thresh_conv, 
+                    get_implaus_thresh_gaussian, 
+                    get_implaus_thresh_t_boot_nonpivotal, 
+                    get_implaus_thresh_t_boot_pivotal
+                    )
 
 
 def frequentist_confidence_set(args, distances, variances):
