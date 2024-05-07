@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import json
-from src.inference import calculate_distances_and_variances
-from src.inference.utils import save_dataset, get_em_pred_filenames
+from .utils import calculate_distances_and_variances
+from src.storage.utils import save_dataset
+from src.emulator.utils import get_em_pred_filenames
 
-def ModelDiscrepancy(args):
+
+def model_discrepancy(args):
     """Collect datasets"""
 
     print('---------ModelDiscrepancy---------')
@@ -20,11 +22,11 @@ def ModelDiscrepancy(args):
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
     # Import input emulator parameter combinations
-    inputs_df = pd.read_csv(inputs_file_path,index_col=0) ###
+    inputs_df = pd.read_csv(inputs_file_path) ###
     num_variants = inputs_df.shape[0]
 
     # Import MODIS observations dataframe
-    obs_df = pd.read_csv(save_here_dir + 'outliers.csv', index_col=0)
+    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
 
     prediction_sets = get_em_pred_filenames(args)
 
@@ -37,8 +39,10 @@ def ModelDiscrepancy(args):
     """
     Save datasets
     """
+    print('Saving distances.csv...')
     save_dataset(all_dists_df, save_here_dir + 'distances.csv')
+    print('Saving variances.csv...')
     save_dataset(all_vars_df, save_here_dir + 'variances.csv')
 
 
-    return
+    return all_dists_df, all_vars_df

@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize_scalar
-from src.inference.utils import save_dataset, save_indexed_dataset
-from src.inference import approx_mle, mle_t
+from src.storage.utils import save_dataset, save_indexed_dataset
+from .gauss import mle_gauss
+from .student_t import mle_t
 import json
 
-def MLE(args):
+
+def mle(args, my_distances, my_variances):
     """
     Collect datasets
     """
@@ -20,13 +22,13 @@ def MLE(args):
 
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
-    inputs_df = pd.read_csv(inputs_file_path,index_col=0)
+    inputs_df = pd.read_csv(inputs_file_path)
     num_variants = inputs_df.shape[0]
 
-    print('Reading in distances...')
-    my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
-    print('Reading in variances...')
-    my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
+    # print('Reading in distances...')
+    # my_distances = pd.read_csv(save_here_dir + 'distances.csv',index_col=0)
+    # print('Reading in variances...')
+    # my_variances = pd.read_csv(save_here_dir + 'variances.csv',index_col=0)
 
 
     """
@@ -34,10 +36,10 @@ def MLE(args):
     """
     if stats_dist_method == 'convolution':
        opt_vals,col_names = approx_mle(my_distances, my_variances, num_variants, args.laplace)
-    elif stats_dist_method == 'student-t':
+    elif 'student-t' in stats_dist_method:
         opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
     elif stats_dist_method == 'gaussian':
-        None
+        opt_vals,col_names = mle_gauss(args, my_distances, my_variances, num_variants)
         # add to this for gaussian if necessary
         # x_0,x_1,fun_val = approx_mle(my_distances, my_variances, num_variants, args.laplace)
 

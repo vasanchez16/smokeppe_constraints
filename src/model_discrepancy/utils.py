@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import json
+from tqdm import tqdm
 
 
 def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets):
@@ -34,16 +35,22 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     idxSet=list((obs_df['missing']) | (obs_df['outlier'])) ###
     # set missing or outlier values to nan
     my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
+    progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
 
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         # time is a datetime string in this case, but df here has time in hours as float
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
+        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
         num_pixels = len(my_obs_df_this_time.index)
 
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set , index_col=0)
+        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
+        if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
+        if 'sdResponse' not in my_predict_df_this_time.columns and 'std' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'std':'sdResponse'}, inplace=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
-        print(f'Read in {prediction_set}')
+        # print(f'Read in {prediction_set}')
 
         my_predict_dfs = [
             my_predict_df_this_time.iloc[k*num_variants:(k+1)*num_variants, :].reset_index(drop=True)
@@ -66,12 +73,13 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
             allDistances.append(pd.DataFrame(distances).transpose())
             allVariances.append(pd.DataFrame(variances).transpose())
-        print(f'Done with {prediction_set}')
+        # print(f'Done with {prediction_set}')
+        progress_bar.update(1)
+    progress_bar.close()
 
-    print('Concatenating dists...')
+    print('Concatenating distances...')
     all_dists_df = pd.concat(allDistances, axis=0).reset_index(drop=True)
-    print('Concatenating Varis...')
+    print('Concatenating variances...')
     all_vars_df = pd.concat(allVariances, axis=0).reset_index(drop=True)
-    print('saving dists...')
 
     return all_dists_df, all_vars_df
