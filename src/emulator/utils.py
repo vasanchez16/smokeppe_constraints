@@ -38,11 +38,15 @@ def get_distances(inputs_df, my_obs_df, toggle_filter, lat_min, lon_min, lat_max
         # print(tm,prediction_set)
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
         num_pixels = len(my_obs_df_this_time.index) # give the number of lat_long points for one time
-        
+
         #need to make df of prediction outputs for each day
         my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set) ###
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'],inplace=True, ignore_index=True)
-        
+        if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
+        if 'sdResponse' not in my_predict_df_this_time.columns and 'std' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'std':'sdResponse'}, inplace=True)
+
         #makes a list of df's, each df represents a different gstp
         my_predict_dfs = [
             my_predict_df_this_time.iloc[k*num_variants:(k+1)*num_variants, :].reset_index(drop=True) 

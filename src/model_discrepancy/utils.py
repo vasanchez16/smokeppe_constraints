@@ -45,6 +45,10 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
         my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
+        if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
+        if 'sdResponse' not in my_predict_df_this_time.columns and 'std' in my_predict_df_this_time.columns:
+            my_predict_df_this_time.rename(columns={'std':'sdResponse'}, inplace=True)
         # opens csv data that stores emulated data for each point, csv's are labeled by time
         # print(f'Read in {prediction_set}')
 
