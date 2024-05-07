@@ -25,7 +25,6 @@ def evaluate(args):
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
-    obsSdCensor = eval_params['obsSdCensor']
     ls_thresh = eval_params['leastSquaresThreshold']
     inputs_file_path = eval_params['emulator_inputs_file_path']
     subregion_filter = eval_params['subregion_filter']
@@ -63,10 +62,7 @@ def evaluate(args):
                                                    lon_min,
                                                    lat_max,
                                                    lon_max,
-                                                   obsSdCensor,
                                                    prediction_sets,
-                                                   ls_thresh,
-                                                   save_here_dir,
                                                    emulator_folder_path)
 
     #Here is where the sorting becomes very important as the distances and variances append to the incorrect corresponding gstp

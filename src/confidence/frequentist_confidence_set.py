@@ -8,9 +8,10 @@ from matplotlib.colors import ListedColormap
 import os
 import json
 from .utils import get_implaus_thresh_t, get_implaus_thresh_conv, get_implaus_thresh_gaussian
+from src.bootstrap.student_t_boot import get_implaus_thresh_t_boot_nonpivotal, get_implaus_thresh_t_boot_pivotal
 
 
-def frequentist_confidence_set(args):
+def frequentist_confidence_set(args, distances, variances):
     """
     Notes here
     """
@@ -21,7 +22,7 @@ def frequentist_confidence_set(args):
     # Extract evaluation parameters
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
-    save_figs_dir = save_here_dir + 'figures/'
+    save_implaus_figs_dir = save_here_dir + 'implaus_figures/'
     inputs_file_path = eval_params['emulator_inputs_file_path']
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
@@ -45,16 +46,29 @@ def frequentist_confidence_set(args):
         cv = get_implaus_thresh_t(args,num_points)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gaussian(args)
-    print(f'Threshold for 95th percentile: {round(cv,2)}')
-    
-    save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
-    save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
+    elif stats_dist_method == 'student-t_bootstrap_pivotal':
+        cv = get_implaus_thresh_t_boot_pivotal(args, distances, variances)
+    elif stats_dist_method == 'student-t_bootstrap_nonpivotal':
+        cv = get_implaus_thresh_t_boot_nonpivotal(args)
 
+    if '_pivotal' in stats_dist_method:
+        print('Pivotal bootstraps obtained.')
+    else:
+        print(f'Threshold for 95th percentile: {round(cv,2)}')
+    
     my_input_df = inputs_df.copy()
     my_input_df['implausibilities'] = implausibilites
+    my_input_df['threshold'] = cv
+    
+    if type(cv) != list:
+        cv = [cv]
+
+    save_thresh_df = pd.DataFrame(cv,columns=['I_thresh'])
+    save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
+
     title = 'Strict bounds implausibilities'
 
-    my_input_df['colors'] = (my_input_df['implausibilities']>cv)
+    my_input_df['colors'] = my_input_df['implausibilities'] > my_input_df['threshold']
     custom_cmap = ListedColormap(['blue', 'red'])
 
     markersize_here = 1
@@ -74,18 +88,39 @@ def frequentist_confidence_set(args):
             c=my_input_df['colors'],
             cmap=custom_cmap
         )
-        plt.axhline(
-            cv,
-            c='r',
-            label = 'Implausibility Threshold'
-        )
+
+        if not '_pivotal' in stats_dist_method:
+            plt.axhline(
+                cv,
+                c='r',
+                label = 'Implausibility Threshold'
+            )
+            plt.legend()
 
         plt.xlabel(param_dict[param], fontsize=8)
         plt.ylabel(r'$I(u^k)$', fontsize = 20)
-        plt.ylim([min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])])
-        plt.legend()
 
-        plt.savefig(save_figs_dir + param, dpi=300)
+        # setting yfloor
+        if '_pivotal' in stats_dist_method:
+            yfloor = min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities'])
+        else:
+            yfloor = min(
+                min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),
+                cv[0]
+            )
+
+        # setting yceiling
+        if '_pivotal' in stats_dist_method:
+            yceiling = max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])
+        else:
+            yceiling = max(
+                max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities']),
+                cv[0]
+            )
+        
+        plt.ylim([yfloor,yceiling])
+
+        plt.savefig(save_implaus_figs_dir + param, dpi=300)
         plt.cla()
         plt.clf()
         plt.close(fig)

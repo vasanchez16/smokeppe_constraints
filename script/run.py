@@ -9,6 +9,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
 from src.emulator.evaluate import evaluate
+from src.emulator.viz import emulator_eval_vis
 from src.model_discrepancy.model_discrepancy import model_discrepancy
 from src.mle.mle import mle
 from src.implausibility.implausibility import implausibilities
@@ -52,6 +53,7 @@ def main(args):
     1. Evaluate the emulator
     """
     evaluate(args)
+    # emulator_eval_vis(args)
     print(runtime(time.time() - start_time))
 
     """
@@ -75,7 +77,7 @@ def main(args):
     """
     5. Compute confidence sets
     """
-    frequentist_confidence_set(args)
+    frequentist_confidence_set(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
