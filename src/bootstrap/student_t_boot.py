@@ -52,7 +52,7 @@ def get_implaus_thresh_t_boot_nonpivotal(args):
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
 
-    best_dists_varis = pd.read_csv(save_here_dir + 'mostPlausibleDistsVaris.csv')
+    best_dists_varis = pd.read_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv')
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
 
     dists = best_dists_varis['dists']
