@@ -11,7 +11,8 @@ from .utils import (get_implaus_thresh_t,
                     get_implaus_thresh_conv, 
                     get_implaus_thresh_gaussian, 
                     get_implaus_thresh_t_boot_nonpivotal, 
-                    get_implaus_thresh_t_boot_pivotal
+                    get_implaus_thresh_t_boot_pivotal,
+                    get_implaus_thresh_gauss_boot
                     )
 
 
@@ -50,6 +51,8 @@ def frequentist_confidence_set(args, distances, variances):
         cv = get_implaus_thresh_t(args,num_points)
     elif stats_dist_method == 'gaussian':
         cv = get_implaus_thresh_gaussian(args)
+    elif stats_dist_method == 'gaussian_bootstrap':
+        cv = get_implaus_thresh_gauss_boot(args)
     elif stats_dist_method == 'student-t_bootstrap_pivotal':
         cv = get_implaus_thresh_t_boot_pivotal(args, distances, variances)
     elif stats_dist_method == 'student-t_bootstrap_nonpivotal':

@@ -122,6 +122,39 @@ def get_implaus_thresh_t_boot_nonpivotal(args):
 
     return implaus_thresh
 
+def get_implaus_thresh_gauss_boot(args):
+    """
+    Use bootstrap to get the implausibility threshold in the case that one threshold applies to all emulator variants and
+    the distribution is best approximated by a Gaussian.
+    """
+    
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+
+    best_dists_varis = pd.read_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv')
+    mle_df = pd.read_csv(save_here_dir + 'mle.csv')
+
+    dists = best_dists_varis['dists']
+    varis = best_dists_varis['varis']
+
+    adj_varis = varis + float(mle_df['variance_mle'])
+    test_stat = dists.div(np.power(adj_varis, 0.5))
+    test_stat = test_stat[~np.isnan(test_stat)]
+
+    implaus_arr = []
+    for i in range(50000):
+        boot = np.random.choice(test_stat, size = len(test_stat), replace=True)
+        implaus = np.sqrt(np.sum(boot**2))
+        implaus_arr.append(implaus)
+    
+    implaus_thresh = np.percentile(implaus_arr, 95)
+
+    return implaus_thresh
+
 
 # Functions above are currently being used, code below is in development to make code more efficient
 def setup_boot(distances, variances, stats_dist_method, save_here_dir):

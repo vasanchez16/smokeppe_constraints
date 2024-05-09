@@ -38,7 +38,7 @@ def mle(args, my_distances, my_variances):
        opt_vals,col_names = approx_mle(my_distances, my_variances, num_variants, args.laplace)
     elif 'student-t' in stats_dist_method:
         opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
-    elif stats_dist_method == 'gaussian':
+    elif 'gaussian' in stats_dist_method:
         opt_vals,col_names = mle_gauss(args, my_distances, my_variances, num_variants)
         # add to this for gaussian if necessary
         # x_0,x_1,fun_val = approx_mle(my_distances, my_variances, num_variants, args.laplace)
