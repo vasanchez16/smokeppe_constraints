@@ -73,7 +73,7 @@ def get_implaus_thresh_t_boot_pivotal(args, distances, variances):
         dists_here = distances.iloc[:,i]
         varis_here = variances.iloc[:,i]
 
-        adj_varis = (varis_here + float(mle_df['variance_mle'])) * ((float(mle_df['nu']) - 2) / float(mle_df['nu']))
+        adj_varis = varis_here + float(mle_df['variance_mle'])
         test_stat = dists_here.div(np.power(adj_varis, 0.5))
         test_stat = test_stat[~np.isnan(test_stat)]
 
@@ -108,7 +108,7 @@ def get_implaus_thresh_t_boot_nonpivotal(args):
     dists = best_dists_varis['dists']
     varis = best_dists_varis['varis']
 
-    adj_varis = (varis + float(mle_df['variance_mle'])) * ((float(mle_df['nu']) - 2) / float(mle_df['nu']))
+    adj_varis = varis + float(mle_df['variance_mle'])
     test_stat = dists.div(np.power(adj_varis, 0.5))
     test_stat = test_stat[~np.isnan(test_stat)]
 
