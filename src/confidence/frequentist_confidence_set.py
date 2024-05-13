@@ -9,9 +9,8 @@ import os
 import json
 from .utils import (get_implaus_thresh_t, 
                     get_implaus_thresh_conv, 
-                    get_implaus_thresh_gaussian, 
-                    get_implaus_thresh_t_boot_nonpivotal, 
-                    get_implaus_thresh_t_boot_pivotal,
+                    get_implaus_thresh_gaussian,
+                    get_implaus_thresh_t_boot,
                     get_implaus_thresh_gauss_boot
                     )
 
@@ -53,27 +52,17 @@ def frequentist_confidence_set(args, distances, variances):
         cv = get_implaus_thresh_gaussian(args)
     elif stats_dist_method == 'gaussian_bootstrap':
         cv = get_implaus_thresh_gauss_boot(args)
-    elif stats_dist_method == 'student-t_bootstrap_pivotal':
-        cv = get_implaus_thresh_t_boot_pivotal(args, distances, variances)
-    elif stats_dist_method == 'student-t_bootstrap_nonpivotal':
-        cv = get_implaus_thresh_t_boot_nonpivotal(args)
+    elif stats_dist_method == 'student-t_bootstrap':
+        cv = get_implaus_thresh_t_boot(args, distances, variances)
 
-    if '_pivotal' in stats_dist_method:
-        print('Pivotal bootstraps obtained.')
-    else:
-        print(f'Threshold for 95th percentile: {round(cv,2)}')
+    print(f'Threshold for 95th percentile: {round(cv,2)}')
     
     my_input_df = inputs_df.copy()
     my_input_df['implausibilities'] = implausibilites
     my_input_df['threshold'] = cv
-    
-    if type(cv) != list:
-        cv = [cv]
 
-    save_thresh_df = pd.DataFrame(cv,columns=['I_thresh'])
+    save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
     save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
-
-    title = 'Strict bounds implausibilities'
 
     my_input_df['colors'] = my_input_df['implausibilities'] > my_input_df['threshold']
     custom_cmap = ListedColormap(['blue', 'red'])
@@ -87,6 +76,7 @@ def frequentist_confidence_set(args, distances, variances):
     for param in param_short_names:
         fig = plt.figure(facecolor='white',dpi=1200)
         
+        # plot implausibility points
         plt.scatter(
             my_input_df[param],
             my_input_df['implausibilities'],
@@ -96,34 +86,28 @@ def frequentist_confidence_set(args, distances, variances):
             cmap=custom_cmap
         )
 
-        if not '_pivotal' in stats_dist_method:
-            plt.axhline(
-                cv,
-                c='r',
-                label = 'Implausibility Threshold'
-            )
-            plt.legend()
+        # plot line for implausibility threshold
+        plt.axhline(
+            cv,
+            c='r',
+            label = 'Implausibility Threshold'
+        )
+        plt.legend()
 
         plt.xlabel(param_dict[param], fontsize=8)
         plt.ylabel(r'$I(u^k)$', fontsize = 20)
 
-        # setting yfloor
-        if '_pivotal' in stats_dist_method:
-            yfloor = min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities'])
-        else:
-            yfloor = min(
-                min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),
-                cv[0]
-            )
+        # setting y axis min
+        yfloor = min(
+            min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),
+            cv
+        )
 
-        # setting yceiling
-        if '_pivotal' in stats_dist_method:
-            yceiling = max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities'])
-        else:
-            yceiling = max(
-                max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities']),
-                cv[0]
-            )
+        # setting y axis max
+        yceiling = max(
+            max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities']),
+            cv
+        )
         
         plt.ylim([yfloor,yceiling])
 

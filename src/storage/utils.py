@@ -62,8 +62,7 @@ def run_checks(args):
         'convolution',
         'student-t',
         'gaussian',
-        'student-t_bootstrap_pivotal',
-        'student-t_bootstrap_nonpivotal',
+        'student-t_bootstrap',
         'gaussian_bootstrap'
                         ]
     if not (eval_params['stats_distribution_method'] in possible_methods):
