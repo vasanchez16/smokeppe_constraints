@@ -53,7 +53,7 @@ def frequentist_confidence_set(args, distances, variances):
     elif stats_dist_method == 'gaussian_bootstrap':
         cv = get_implaus_thresh_gauss_boot(args)
     elif stats_dist_method == 'student-t_bootstrap':
-        cv = get_implaus_thresh_t_boot(args, distances, variances)
+        cv = get_implaus_thresh_t_boot(args)
 
     print(f'Threshold for 95th percentile: {round(cv,2)}')
     
