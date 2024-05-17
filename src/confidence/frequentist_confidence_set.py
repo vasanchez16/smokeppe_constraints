@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 import scipy.stats
 import math
@@ -11,8 +10,8 @@ from .utils import (get_implaus_thresh_t,
                     get_implaus_thresh_conv, 
                     get_implaus_thresh_gaussian,
                     get_implaus_thresh_t_boot,
-                    get_implaus_thresh_gauss_boot
-                    )
+                    get_implaus_thresh_gauss_boot)
+from .viz import plot_constraint_1d
 
 
 def frequentist_confidence_set(args, distances, variances):
@@ -73,45 +72,14 @@ def frequentist_confidence_set(args, distances, variances):
     else:
         markersize_here = 0.01
 
+    # Load MLE
+    mle_df = pd.read_csv(save_here_dir + 'mle.csv')
     for param in param_short_names:
-        fig = plt.figure(facecolor='white',dpi=1200)
-        
-        # plot implausibility points
-        plt.scatter(
-            my_input_df[param],
-            my_input_df['implausibilities'],
-            alpha=1,
-            s=markersize_here,
-            c=my_input_df['colors'],
-            cmap=custom_cmap
-        )
-
-        # plot line for implausibility threshold
-        plt.axhline(
-            cv,
-            c='r',
-            label = 'Implausibility Threshold'
-        )
-        plt.legend()
-
-        plt.xlabel(param_dict[param], fontsize=8)
-        plt.ylabel(r'$I(u^k)$', fontsize = 20)
-
-        # setting y axis min
-        yfloor = min(
-            min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),
-            cv
-        )
-
-        # setting y axis max
-        yceiling = max(
-            max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities']),
-            cv
-        )
-        
-        plt.ylim([yfloor,yceiling])
-
-        plt.savefig(save_implaus_figs_dir + param, dpi=300)
-        plt.cla()
-        plt.clf()
-        plt.close(fig)
+        plot_constraint_1d(my_input_df,
+                           param,
+                           cv,
+                           save_implaus_figs_dir,
+                           param_dict,
+                           custom_cmap,
+                           markersize_here,
+                           mle_idx=mle_df['parameter_set_num'])
