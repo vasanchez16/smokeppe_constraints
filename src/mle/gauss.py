@@ -40,10 +40,9 @@ def mle_gauss(args, distances, variances, num_variants):
     max_l_for_us = []
     sigma_sqr_terms = []
     epsilon_terms = []
+    progress_bar = tqdm(total=num_variants, desc="Progress")
     for u in range(num_variants):
         param_set = u
-        if u%20000 == 0:
-            print(f'Parameter set: {u}')
         x_0 = init_vals
         if len(init_vals) > 1:
             res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0]),tuple(bnds[1])])
@@ -52,6 +51,8 @@ def mle_gauss(args, distances, variances, num_variants):
             res = minimize(minus_log_l,x_0,bounds=[tuple(bnds[0])])
         max_l_for_us.append(-res.fun)
         sigma_sqr_terms.append(res.x[0]**2)
+        progress_bar.update(1)
+    progress_bar.close()
 
     if len(init_vals) > 1:
         all_mle = pd.DataFrame([max_l_for_us,sigma_sqr_terms,epsilon_terms], index = ['log_L', 'sigma_sqr', 'epsilon']).transpose()
