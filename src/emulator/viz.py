@@ -75,7 +75,7 @@ def plot_outliers(outliers_df, ls_thresh, save_here_dir):
     axins.set_xlim(x1,x2)
     axins.set_ylim(y1,y2)
     x1 = -1
-    x2 = max(outliers_df.leastSquares)
+    x2 = np.nanmax(outliers_df.leastSquares)
     y1 = 0
     y2 = max_bin_size + (max_bin_size * 0.05)
     ax1.set_xlim(x1,x2)
