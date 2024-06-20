@@ -33,7 +33,7 @@ def combined_implausibilities(args, run_dirs):
 
         # calc normalized implaus and thresh vals and save vals
         comb_implaus[str(num)] = implaus['0'] * scale_factor
-        all_thresholds[str(num)] = [float(thresh['I_thresh'])*scale_factor]
+        all_thresholds[str(num)] = [float(thresh['I_thresh']) * scale_factor]
 
     # sum all implaus for a total implaus
     comb_implaus['total'] = np.sqrt((comb_implaus.loc[:,:] ** 2).sum(axis=1))
