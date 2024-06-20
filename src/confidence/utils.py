@@ -71,6 +71,9 @@ def get_implaus_thresh_t_boot(args):
     dists = best_dists_varis['dists']
     varis = best_dists_varis['varis']
 
+    if 'epsilon' in mle_df.columns:
+        dists = dists + float(mle_df['epsilon'])
+
     adj_varis = varis + float(mle_df['variance_mle'])
     test_stat = dists.div(np.power(adj_varis, 0.5))
     test_stat = test_stat[~np.isnan(test_stat)]
@@ -103,6 +106,9 @@ def get_implaus_thresh_gauss_boot(args):
 
     dists = best_dists_varis['dists']
     varis = best_dists_varis['varis']
+
+    if 'epsilon' in mle_df.columns:
+        dists = dists + float(mle_df['epsilon'])
 
     adj_varis = varis + float(mle_df['variance_mle'])
     test_stat = dists.div(np.power(adj_varis, 0.5))
