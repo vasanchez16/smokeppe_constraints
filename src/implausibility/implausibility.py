@@ -23,6 +23,8 @@ def implausibilities(args, my_distances, my_variances):
     additional_variance = mle_df['variance_mle'].values[0]
     my_variances_adjusted = my_variances + additional_variance
 
+
+    # This does not pass when bootstrap is requested (stats_dist_method='student-t_bootstrap')
     if stats_dist_method == 'student-t':
         nu_opt = float(mle_df['nu'])
         my_variances_adjusted = my_variances_adjusted * ((nu_opt-2)/nu_opt)
