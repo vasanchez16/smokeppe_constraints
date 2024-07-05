@@ -14,6 +14,7 @@ from src.model_discrepancy.model_discrepancy import model_discrepancy
 from src.mle.mle import mle
 from src.implausibility.implausibility import implausibilities
 from src.confidence.frequentist_confidence_set import frequentist_confidence_set
+from src.confidence.viz import variant_distribution_comp
 from src.storage.utils import (runtime,
                                set_up_directories,
                                run_checks,
@@ -72,6 +73,7 @@ def main(args):
     4. Compute implausibilities
     """
     implausibilities(args, distances, variances)
+    variant_distribution_comp(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """

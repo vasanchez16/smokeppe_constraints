@@ -113,6 +113,153 @@ def distribution_comparison(folder_path, bins_here=100):
     )
     plt.legend()
     return
+
+
+def variant_distribution_comp(args, dists, varis):
+    print('---------VariantDistributionComp---------')
+
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import os
+    import json
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+
+    # Extract evaluation parameters
+    run_label = eval_params['run_label']
+    save_here_dir = args.output_dir + run_label + '/'
+
+    stats_dist_method = eval_params['stats_distribution_method']
+
+    # open calculated implausibility values
+    implaus = pd.read_csv(save_here_dir + 'implausibilities.csv')
+    num_variants = len(implaus)
+
+    # open mle stats for mle selected variant
+    mle_df = pd.read_csv(save_here_dir + 'mle.csv')
+    mle_variant = int(mle_df['parameter_set_num'])
+
+    if 'epsilon' in mle_df.columns:
+        epsilon = float(mle_df['epsilon'])
+
+    # get median performing variant
+    implaus.sort_values(['0'], inplace=True)
+    median_ind = int((num_variants/2) - 1)
+    median_variant_num = implaus.iloc[median_ind,:].name
+
+    # open all dists and varis data
+    # dists = pd.read_csv(save_here_dir + 'distances.csv')
+    # varis = pd.read_csv(save_here_dir + 'variances.csv')
+
+    all_variants = list(range(len(implaus)))
+    all_variants.remove(mle_variant)
+    all_variants.remove(median_variant_num)
+
+    selected_variants = list(np.random.choice(all_variants,0,replace=False))
+    selected_variants.append(median_variant_num)
+
+    # save dists and varis for selected emulator variants
+    for variant in selected_variants:
+        df = pd.DataFrame()
+        df['dists'] = dists.iloc[:,variant]
+        df['varis'] = varis.iloc[:,variant]
+
+        if variant == median_variant_num:
+            df.to_csv(save_here_dir + 'general_figures/' + 'DistsVaris_med_' + str(variant) + '.csv')
+        else:
+            df.to_csv(save_here_dir + 'general_figures/' + 'DistsVaris_' + str(variant) + '.csv')
+
+    def calc_test_stat_loc(df):
+        dists = df['dists']
+        varis = df['varis']
+
+        try:
+            dists = dists + epsilon
+        except:
+            None
+        
+        adj_varis = (varis + float(mle_df['variance_mle'])) 
+        if 'student-t' in stats_dist_method:
+            adj_varis = adj_varis * ((float(mle_df['nu'])-2)/float(mle_df['nu']))
+
+
+        test_stat = dists.div(np.power(adj_varis,0.5))
+        test_stat = test_stat.values
+        return test_stat
+        
+    mle_dists_varis = pd.read_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv')
+    dof = float(mle_df['nu'])
+    mle_test_stat = calc_test_stat_loc(mle_dists_varis)
+
+    size = sum(~np.isnan(mle_test_stat))
+    sim_t = np.random.standard_t(dof,size)
+
+    plt.figure(figsize=(10,8))
+    bins_here = 100
+
+    # print(np.min(mle_test_stat), np.min(sim_t))
+    mins_arr = []
+    maxs_arr = []
+    for variant in selected_variants:
+        try:
+            df = pd.read_csv(save_here_dir + 'general_figures/' + 'DistsVaris_' + str(variant) + '.csv')
+        except:
+            df = pd.read_csv(save_here_dir + 'general_figures/' + 'DistsVaris_med_' + str(variant) + '.csv')
+
+        test_stat = calc_test_stat_loc(df)
+        mins_arr.append(np.nanmin(test_stat))
+        maxs_arr.append(np.nanmax(test_stat))
+
+    range_min = min(np.nanmin(mle_test_stat), np.nanmin(sim_t), min(mins_arr))
+    range_max = max(np.nanmax(mle_test_stat), np.nanmax(sim_t), max(maxs_arr))
+
+
+    plt.hist(
+        mle_test_stat,
+        bins=bins_here,
+        alpha=0.5,
+        label='MLE',
+        range = (range_min, range_max)
+    )
+    plt.hist(
+        sim_t, 
+        bins=bins_here,
+        alpha=0.5,
+        label='Simulated Student-t',
+        range = (range_min, range_max)
+    )
+
+    for variant in selected_variants:
+        try:
+            df = pd.read_csv(save_here_dir + 'general_figures/' + 'DistsVaris_' + str(variant) + '.csv')
+        except:
+            df = pd.read_csv(save_here_dir + 'general_figures/' + 'DistsVaris_med_' + str(variant) + '.csv')
+
+        test_stat = calc_test_stat_loc(df)
+
+        if variant == median_variant_num:
+            label_here = 'Median'
+            alpha_here = 0.5
+        else:
+            label_here = None #str(variant)
+            alpha_here = 0.2
+
+        plt.hist(
+            test_stat,
+            bins=bins_here,
+            alpha=alpha_here,
+            label=label_here,
+            range = (range_min, range_max)
+        )
+    plt.legend()
+
+
+    plt.savefig(save_here_dir + 'general_figures/' + 'distributionComparison.png')
+
+
+    return
 #---------------------------------------------------------------------------------------------------------------------------
 # multi-parameter constraints
 
