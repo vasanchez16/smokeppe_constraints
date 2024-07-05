@@ -30,6 +30,7 @@ def combined_implausibilities(args, run_dirs):
         # calc total num of points for target variable
         num_points = sum(~outs['missing'] & ~outs['outlier'])
         scale_factor = num_points ** (-1/2)
+        # scale_factor = 1
 
         # calc normalized implaus and thresh vals and save vals
         comb_implaus[str(num)] = implaus['0'] * scale_factor
