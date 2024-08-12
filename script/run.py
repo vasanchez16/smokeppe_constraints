@@ -49,6 +49,7 @@ def main(args):
     save_eval_params_file(args)
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
+    stats_dist_method = eval_params['stats_distribution_method']
 
     """
     1. Evaluate the emulator
@@ -73,7 +74,8 @@ def main(args):
     4. Compute implausibilities
     """
     implausibilities(args, distances, variances)
-    variant_distribution_comp(args, distances, variances)
+    if stats_dist_method == 'student-t_bootstrap':
+        variant_distribution_comp(args, distances, variances)
     print(runtime(time.time() - start_time))
 
     """
