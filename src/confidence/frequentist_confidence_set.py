@@ -30,7 +30,7 @@ def frequentist_confidence_set(args, distances, variances):
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
 
-    implausibilites = pd.read_csv(save_here_dir + 'implausibilities.csv')
+    implausibilities = pd.read_csv(save_here_dir + 'implausibilities.csv')
     inputs_df = pd.read_csv(inputs_file_path)
     obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
 
@@ -54,10 +54,16 @@ def frequentist_confidence_set(args, distances, variances):
     elif stats_dist_method == 'student-t_bootstrap':
         cv = get_implaus_thresh_t_boot(args)
 
+    cv = cv / np.sqrt(num_points)
     print(f'Threshold for 95th percentile: {round(cv,2)}')
+
+    implausibilities = implausibilities / np.sqrt(num_points)
+    norm_implaus = pd.DataFrame(implausibilities)
+    # Save norm Implausibility values
+    norm_implaus.to_csv(save_here_dir + 'norm_implausibilities.csv', index=False)
     
     my_input_df = inputs_df.copy()
-    my_input_df['implausibilities'] = implausibilites
+    my_input_df['implausibilities'] = implausibilities
     my_input_df['threshold'] = cv
 
     save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
