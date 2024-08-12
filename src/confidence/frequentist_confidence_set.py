@@ -11,7 +11,7 @@ from .utils import (get_implaus_thresh_t,
                     get_implaus_thresh_gaussian,
                     get_implaus_thresh_t_boot,
                     get_implaus_thresh_gauss_boot)
-from .viz import plot_constraint_1d
+from .viz import plot_constraint_1d, all_param_implaus
 
 
 def frequentist_confidence_set(args, distances, variances):
@@ -89,3 +89,13 @@ def frequentist_confidence_set(args, distances, variances):
                            custom_cmap,
                            markersize_here,
                            mle_idx=mle_df['parameter_set_num'])
+        
+    all_param_implaus(
+        my_input_df,
+        cv,
+        save_implaus_figs_dir,
+        param_dict,
+        custom_cmap,
+        markersize_here*20,
+        param_short_names,
+        mle_idx=mle_df['parameter_set_num'])

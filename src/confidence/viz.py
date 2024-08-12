@@ -28,7 +28,7 @@ def plot_constraint_1d(my_input_df,
             my_input_df['implausibilities'][mle_idx],
             alpha=1,
             marker='x',
-            s=10*markersize_here,
+            s=20*markersize_here,
             c='k'
         )
 
@@ -61,6 +61,81 @@ def plot_constraint_1d(my_input_df,
     plt.cla()
     plt.clf()
     plt.close(fig)
+
+def all_param_implaus(
+    my_input_df,
+    cv,
+    save_implaus_figs_dir,
+    param_dict,
+    custom_cmap,
+    markersize_here,
+    param_short_names,
+    mle_idx=None
+):
+    """
+    Documentation
+    """
+
+    if len(param_short_names) % 3 != 0:
+        return None
+    
+    # create subplots
+    fig, axs = plt.subplots(3,4,figsize=(26,16))
+    axs = axs.flatten()
+
+    # setting y axis min
+    yfloor = min(
+        min(my_input_df['implausibilities'])-(0.1)*np.mean(my_input_df['implausibilities']),
+        cv
+    )
+
+    # setting y axis max
+    yceiling = max(
+        max(my_input_df['implausibilities'])+(0.05)*np.mean(my_input_df['implausibilities']),
+        cv
+    )
+
+    k = 0
+    # return raw_vals, df_concat
+    for param_num in range(len(param_short_names)):
+        # Get responses for param of interest
+        param = param_short_names[param_num]
+
+        axs[k].scatter(
+            my_input_df[param],
+            my_input_df['implausibilities'],
+            alpha=1,
+            s=markersize_here,
+            c=my_input_df['colors'],
+            cmap=custom_cmap
+        )
+
+        if mle_idx is not None:
+            axs[k].scatter(
+                my_input_df[param][mle_idx],
+                my_input_df['implausibilities'][mle_idx],
+                alpha=1,
+                marker='x',
+                s=20*markersize_here,
+                c='k'
+            )
+
+        axs[k].axhline(
+            cv,
+            c='r',
+            label = 'Implausibility Threshold'
+        )
+
+        axs[k].set_ylim([yfloor,yceiling])
+
+        axs[k].set_xlabel(param_dict[param], fontsize=16)
+
+        if k in [0,4,8]:
+            axs[k].set_ylabel(r'$I(u^k)$',fontsize=18)
+        k += 1
+    plt.tight_layout()
+
+    plt.savefig(save_implaus_figs_dir + 'all_param_implaus', dpi=300)
 
 
 #---------------------------------------------------------------------------------------------------------------------------
