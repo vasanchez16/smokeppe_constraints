@@ -54,6 +54,7 @@ def frequentist_confidence_set(args, distances, variances):
     elif stats_dist_method == 'student-t_bootstrap':
         cv = get_implaus_thresh_t_boot(args)
 
+    cv_raw = cv
     cv = cv / np.sqrt(num_points)
     print(f'Threshold for 95th percentile: {round(cv,2)}')
 
@@ -66,7 +67,7 @@ def frequentist_confidence_set(args, distances, variances):
     my_input_df['implausibilities'] = implausibilities
     my_input_df['threshold'] = cv
 
-    save_thresh_df = pd.DataFrame([cv],columns=['I_thresh'])
+    save_thresh_df = pd.DataFrame([cv, cv_raw],index=['I_thresh', 'raw_I_thresh']).transpose()
     save_thresh_df.to_csv(save_here_dir + 'implausibilityThreshold.csv', index=False)
 
     my_input_df['colors'] = my_input_df['implausibilities'] > my_input_df['threshold']
