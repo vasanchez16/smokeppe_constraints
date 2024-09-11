@@ -43,6 +43,31 @@ def set_up_directories(args):
 
     return
 
+def set_up_directories_combined_implaus(args):
+    """
+    add doc
+    """
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    run_label = eval_params['run_label']
+    run_dirs = eval_params['directories']
+
+    if not os.path.exists(args.output_dir + run_label):
+        os.mkdir(args.output_dir + run_label)
+
+    if not os.path.exists(args.output_dir + run_label + '/comb_implaus_figures'):
+        os.mkdir(args.output_dir + run_label + '/comb_implaus_figures')
+
+    if not os.path.exists(args.output_dir + run_label + '/implaus_figures'):
+        os.mkdir(args.output_dir + run_label + '/implaus_figures')
+
+    for dir in run_dirs:
+        subfolder = dir.split('/')[-1]
+        if not os.path.exists(args.output_dir + run_label + '/implaus_figures/' + subfolder):
+            os.mkdir(args.output_dir + run_label + '/implaus_figures/' + subfolder)
+
+    return
+
 def save_eval_params_file(args):
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)

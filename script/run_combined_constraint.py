@@ -11,7 +11,7 @@ sys.path.append(parent_dir)
 from src.implausibility.combined_implausibility import combined_implausibilities
 from src.confidence.combined_frequentist_confidence_set import combined_frequentist_confidence_set
 from src.storage.utils import (runtime,
-                               set_up_directories,
+                               set_up_directories_combined_implaus,
                                run_checks,
                                save_eval_params_file)
 
@@ -39,7 +39,7 @@ def main(args):
     start_time = time.time()
 
     # Set-up
-    set_up_directories(args)
+    set_up_directories_combined_implaus(args)
     save_eval_params_file(args)
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)

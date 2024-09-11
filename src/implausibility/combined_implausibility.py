@@ -23,19 +23,22 @@ def combined_implausibilities(args, run_dirs):
             dir_here = dir_here + '/'
         
         # read in each implaus, thresh, and outs 
-        implaus = pd.read_csv(dir_here + 'implausibilities.csv')
-        thresh = pd.read_csv(dir_here + 'implausibilityThreshold.csv')
-        outs = pd.read_csv(dir_here + 'outliers.csv')
+        norm_implaus = pd.read_csv(dir_here + 'norm_implausibilities.csv')
+        thresholds = pd.read_csv(dir_here + 'implausibilityThreshold.csv')
+        norm_thresh = float(thresholds['I_thresh'])
+
+        # implaus = pd.read_csv(dir_here + 'implausibilities.csv')
+        # thresh = pd.read_csv(dir_here + 'implausibilityThreshold.csv')
+        # outs = pd.read_csv(dir_here + 'outliers.csv')
 
         # calc total num of points for target variable
-        num_points = sum(~outs['missing'] & ~outs['outlier'])
-        scale_factor = num_points ** (-1/2)
+        # num_points = sum(~outs['missing'] & ~outs['outlier'])
+        # scale_factor = num_points ** (-1/2)
         # scale_factor = 1
 
         # calc normalized implaus and thresh vals and save vals
-        comb_implaus[str(num)] = implaus['0'] * scale_factor
-        all_thresholds[str(num)] = [float(thresh['I_thresh']) * scale_factor]
-
+        comb_implaus[str(num)] = norm_implaus['0']
+        all_thresholds[str(num)] = [norm_thresh]
     # sum all implaus for a total implaus
     comb_implaus['total'] = np.sqrt((comb_implaus.loc[:,:] ** 2).sum(axis=1))
     # comb_implaus['total'] = comb_implaus.sum(axis=1)
