@@ -61,7 +61,7 @@ def frequentist_confidence_set(args, distances, variances):
 
     cv_raw = cv
     cv = cv / np.sqrt(num_points)
-    print(f'Threshold for 95th percentile: {round(cv,2)}')
+    print(f'Implausibility Threshold: {round(cv,2)}')
 
     implausibilities = implausibilities / np.sqrt(num_points)
     norm_implaus = pd.DataFrame(implausibilities)
