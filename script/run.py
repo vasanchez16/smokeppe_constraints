@@ -49,6 +49,9 @@ def main(args):
         eval_params = json.load(file)
     stats_dist_method = eval_params['stats_distribution_method']
 
+    run_label = eval_params['run_label']
+    print(f'Run label: {run_label}')
+    
     """
     2. Estimate model discrepancy
     """
