@@ -17,7 +17,6 @@ def model_discrepancy(args):
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
 
-    emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
     inputs_file_path = eval_params['emulator_inputs_file_path']
 
@@ -26,7 +25,7 @@ def model_discrepancy(args):
     num_variants = inputs_df.shape[0]
 
     # Import MODIS observations dataframe
-    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
+    obs_df = pd.read_csv(satellite_file_path)
 
     prediction_sets = get_em_pred_filenames(args)
 
