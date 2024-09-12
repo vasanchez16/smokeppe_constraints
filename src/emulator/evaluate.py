@@ -71,7 +71,7 @@ def evaluate(args):
     outliers_df['variances'] = variances
 
     #filter out the outliers
-    plot_outliers(outliers_df, None, save_here_dir)
+    plot_outliers(outliers_df, save_here_dir)
     
     # Create column to label missing data
     outliers_df['missing'] = np.isnan(outliers_df.leastSquares)
