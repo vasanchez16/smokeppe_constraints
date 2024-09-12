@@ -102,6 +102,13 @@ def run_checks(args):
     if eval_params['emulator_output_folder_path'][-1] != '/':
         raise(ValueError('End emulator_output_folder_path with \'/\' character'))
     
+    try:
+        eval_params['confidence_level']
+        if (float(eval_params['confidence_level']) >= 100) or (float(eval_params['confidence_level']) <= 0):
+            raise(ValueError('Confidence level must be a number between 0 and 100'))
+    except:
+        None
+    
     return
 
 def runtime(seconds):

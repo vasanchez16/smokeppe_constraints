@@ -43,16 +43,21 @@ def frequentist_confidence_set(args, distances, variances):
     
     num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])
 
+    try:
+        conf_lvl = eval_params['confidence_level']
+    except:
+        conf_lvl = 95
+
     if stats_dist_method == 'convolution':
-        cv = get_implaus_thresh_conv(args)
+        cv = get_implaus_thresh_conv(args,conf_lvl)
     elif stats_dist_method == 'student-t':
-        cv = get_implaus_thresh_t(args,num_points)
+        cv = get_implaus_thresh_t(args,num_points,conf_lvl)
     elif stats_dist_method == 'gaussian':
-        cv = get_implaus_thresh_gaussian(args)
+        cv = get_implaus_thresh_gaussian(args,conf_lvl)
     elif stats_dist_method == 'gaussian_bootstrap':
-        cv = get_implaus_thresh_gauss_boot(args)
+        cv = get_implaus_thresh_gauss_boot(args,conf_lvl)
     elif stats_dist_method == 'student-t_bootstrap':
-        cv = get_implaus_thresh_t_boot(args)
+        cv = get_implaus_thresh_t_boot(args,conf_lvl)
 
     cv_raw = cv
     cv = cv / np.sqrt(num_points)

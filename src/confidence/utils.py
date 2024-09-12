@@ -6,10 +6,10 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
 
-def get_implaus_thresh_conv(args):
+def get_implaus_thresh_conv(args, conf_lvl):
     raise NotImplementedError
 
-def get_implaus_thresh_t(args, num_points):
+def get_implaus_thresh_t(args, num_points, conf_lvl):
     """
     Notes, This is for the method with the t-distribution approximation. It simulates
     a t distribution and gets the threshold for confidence intervals.
@@ -32,11 +32,11 @@ def get_implaus_thresh_t(args, num_points):
     sum_this = [i * i for i in sum_this]
     summed = np.sum(sum_this,axis=0)
     
-    thresh = np.sqrt(np.percentile(summed,95))
+    thresh = np.sqrt(np.percentile(summed,conf_lvl))
 
     return thresh
 
-def get_implaus_thresh_gaussian(args):
+def get_implaus_thresh_gaussian(args, conf_lvl):
 
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
@@ -47,13 +47,13 @@ def get_implaus_thresh_gaussian(args):
 
     obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
 
-    thresh = np.sqrt(scipy.stats.chi2.ppf(0.95, sum((~obs_df.missing) & (~obs_df.outlier))))
+    thresh = np.sqrt(scipy.stats.chi2.ppf(conf_lvl / 100, sum((~obs_df.missing) & (~obs_df.outlier))))
 
     return thresh
 
 # Bootstrap
 
-def get_implaus_thresh_t_boot(args):
+def get_implaus_thresh_t_boot(args, conf_lvl):
     """
     Use bootstrap to get the implausibility thresold in the case that one threshold applies to all emulator variants.
     """
@@ -84,11 +84,11 @@ def get_implaus_thresh_t_boot(args):
         implaus = np.sqrt(np.sum(boot**2))
         implaus_arr.append(implaus)
     
-    implaus_thresh = np.percentile(implaus_arr, 95)
+    implaus_thresh = np.percentile(implaus_arr, conf_lvl)
 
     return implaus_thresh
 
-def get_implaus_thresh_gauss_boot(args):
+def get_implaus_thresh_gauss_boot(args, conf_lvl):
     """
     Use bootstrap to get the implausibility threshold in the case that one threshold applies to all emulator variants and
     the distribution is best approximated by a Gaussian.
@@ -120,6 +120,6 @@ def get_implaus_thresh_gauss_boot(args):
         implaus = np.sqrt(np.sum(boot**2))
         implaus_arr.append(implaus)
     
-    implaus_thresh = np.percentile(implaus_arr, 95)
+    implaus_thresh = np.percentile(implaus_arr, conf_lvl)
 
     return implaus_thresh

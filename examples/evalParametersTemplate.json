@@ -2,8 +2,8 @@
     "run_label": "str: A folder will be created with this name in your output directory",
     "emulator_output_folder_path": "str: A folder that stores csv files containig the emulator predictions. Predictions should be labeled as predictions_YYYY_MM_DD_HH_mm_SS.csv ",
     "satellite_file_path": "str: A csv file that contains the satellite data for comparison.",
-    "obsSdCensor": "float: The highest standard deviation acceptable for satellite measurements (those higher will be filtered out).",
     "emulator_inputs_file_path": "str: A csv file that includes the feature values for each emulator variant.",
+    "obsSdCensor": "float: The highest standard deviation acceptable for satellite measurements (those higher will be filtered out).",
     "subregion_filter":{
         "toggle_filter": "boolean: Indicates whether or not to perform the workflow on a spatial subregion of the given data",
         "lat_min": "float: Minimum latitude",
@@ -17,6 +17,7 @@
         "smoke_diam": "Smoke Diameter"
     },
     "stats_distribution_method": "Options are: (convolution,student-t,gaussian)",
+    "confidence_level":"float: Confidence level of hypothesis test, must be number between 0 and 100",
     "MLE_optimization":{
         "bounds": "Value bounds for the MLE optimizer i.e. [[1,2],[3,4]]",
         "initial_vals":"Initial values for the MLE optimizer i.e. [1.5,3.5]"
