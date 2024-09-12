@@ -29,10 +29,11 @@ def frequentist_confidence_set(args, distances, variances):
     inputs_file_path = eval_params['emulator_inputs_file_path']
     param_dict = eval_params['parameters_dictionary']
     stats_dist_method = eval_params['stats_distribution_method']
+    satellite_file_path = eval_params['satellite_file_path']
 
     implausibilities = pd.read_csv(save_here_dir + 'implausibilities.csv')
     inputs_df = pd.read_csv(inputs_file_path)
-    obs_df = pd.read_csv(save_here_dir + 'outliers.csv')
+    obs_df = pd.read_csv(satellite_file_path)
 
     try:
         inputs_df.drop(columns=['Unnamed: 0'], inplace=True)
@@ -41,7 +42,7 @@ def frequentist_confidence_set(args, distances, variances):
 
     param_short_names = list(inputs_df.columns)
     
-    num_points = sum(~obs_df['missing'] & ~obs_df['outlier'])
+    num_points = sum((obs_df['meanResponse'] != 0) & (~np.isnan(obs_df['meanResponse'])))
 
     try:
         conf_lvl = eval_params['confidence_level']
