@@ -79,7 +79,7 @@ def get_implaus_thresh_t_boot(args, conf_lvl):
     test_stat = test_stat[~np.isnan(test_stat)]
 
     implaus_arr = []
-    for i in range(50000):
+    for i in range(100000):
         boot = np.random.choice(test_stat, size = len(test_stat), replace=True)
         implaus = np.sqrt(np.sum(boot**2))
         implaus_arr.append(implaus)
@@ -115,7 +115,7 @@ def get_implaus_thresh_gauss_boot(args, conf_lvl):
     test_stat = test_stat[~np.isnan(test_stat)]
 
     implaus_arr = []
-    for i in range(50000):
+    for i in range(100000):
         boot = np.random.choice(test_stat, size = len(test_stat), replace=True)
         implaus = np.sqrt(np.sum(boot**2))
         implaus_arr.append(implaus)
