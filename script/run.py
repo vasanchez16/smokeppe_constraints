@@ -8,8 +8,6 @@ import json
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
-from src.emulator.evaluate import evaluate
-from src.emulator.viz import emulator_eval_vis
 from src.model_discrepancy.model_discrepancy import model_discrepancy
 from src.mle.mle import mle
 from src.implausibility.implausibility import implausibilities
@@ -50,13 +48,6 @@ def main(args):
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
     stats_dist_method = eval_params['stats_distribution_method']
-
-    """
-    1. Evaluate the emulator
-    """
-    evaluate(args)
-    # emulator_eval_vis(args)
-    print(runtime(time.time() - start_time))
 
     """
     2. Estimate model discrepancy
