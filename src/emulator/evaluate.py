@@ -25,7 +25,6 @@ def evaluate(args):
 
     emulator_folder_path = eval_params['emulator_output_folder_path']
     satellite_file_path = eval_params['satellite_file_path']
-    ls_thresh = eval_params['leastSquaresThreshold']
     inputs_file_path = eval_params['emulator_inputs_file_path']
     subregion_filter = eval_params['subregion_filter']
 
@@ -72,14 +71,11 @@ def evaluate(args):
     outliers_df['variances'] = variances
 
     #filter out the outliers
-    plot_outliers(outliers_df, ls_thresh, save_here_dir)
+    plot_outliers(outliers_df, None, save_here_dir)
     
     # Create column to label missing data
     outliers_df['missing'] = np.isnan(outliers_df.leastSquares)
-    print(f'Least squares threshold:{ls_thresh}')
     # Create column to label points as outliers or above LS threshold
-    outliers_df['outlier'] = [
-        outliers_df.leastSquares[k] > ls_thresh for k in range(len(outliers_df.leastSquares))
-                            ]
+    outliers_df['outlier'] = False
     # Save new outliers csv with outlier and missing columns
     outliers_df.to_csv(save_here_dir + 'outliers.csv', index=True)

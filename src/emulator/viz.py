@@ -52,7 +52,7 @@ def plot_measurements(lon_min,
     return
 
 
-def plot_outliers(outliers_df, ls_thresh, save_here_dir):
+def plot_outliers(outliers_df, save_here_dir):
     # Initiate for plots
     fig, ax1 = plt.subplots(figsize=(10,10))
     # Plot outer histogram
@@ -63,9 +63,6 @@ def plot_outliers(outliers_df, ls_thresh, save_here_dir):
     axins = ax1.inset_axes([0.25,0.28,0.7,.7])
     # Plot inner axes
     axins.hist(outliers_df.leastSquares,bins=400)
-    # Create threshold line on plot
-    axins.vlines(ls_thresh,0,max_bin_size*2,linestyles='--',color='red')
-    ax1.vlines(ls_thresh,0,max_bin_size*2,linestyles='--',color='red')
 
     #subregion of original image
     x1 = -1
