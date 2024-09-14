@@ -115,3 +115,17 @@ def runtime(seconds):
     hrs = int(seconds / (60*60))
     minutes = int((seconds % (60*60)) / 60)
     return f'Current Runtime: {hrs} hours {minutes} minutes'
+
+def get_em_pred_filenames(args):
+    """
+    getting sorted list of the em prediciton filenames
+    """
+
+    with open(args.input_file,'r') as file:
+        eval_params = json.load(file)
+    emulator_folder_path = eval_params['emulator_output_folder_path']
+
+    folder_contents = os.listdir(emulator_folder_path)
+    folder_contents.sort()
+
+    return folder_contents
