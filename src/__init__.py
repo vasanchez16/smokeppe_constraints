@@ -2,7 +2,6 @@
 Code for training emulators to the Smoke PPE and performing parameter inference
 """
 import src.confidence
-import src.emulator
 import src.implausibility
 import src.mle
 import src.model_discrepancy
