@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import json
 from tqdm import tqdm
+import netCDF4 as nc
 
 
 def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets):
@@ -43,7 +44,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
         num_pixels = len(my_obs_df_this_time.index)
 
-        my_predict_df_this_time = pd.read_csv(emulator_folder_path + prediction_set)
+        my_predict_df_this_time = read_in_prediction_data(emulator_folder_path, prediction_set)
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
             my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
@@ -83,3 +84,27 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     all_vars_df = pd.concat(allVariances, axis=0).reset_index(drop=True)
 
     return all_dists_df, all_vars_df
+
+def read_in_prediction_data(emulator_folder_path, prediction_set):
+    if '.nc' in prediction_set:
+        data = read_nc_pred_file(emulator_folder_path, prediction_set)
+    elif '.csv' in prediction_set:
+        data = pd.read_csv(emulator_folder_path + prediction_set)
+    return data
+
+def read_nc_pred_file(emulator_folder_path, prediction_set):
+    nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
+
+    data = pd.DataFrame()
+    lats = [lat for lat in nc_file['latitude'][:].data for lon in nc_file['longitude'][:].data]
+    data['latitude'] = np.repeat(lats,len(nc_file['variant'][:].data))
+    lons = [lon for lat in nc_file['latitude'][:].data for lon in nc_file['longitude'][:].data]
+    data['longitude'] = np.repeat(lons,len(nc_file['variant'][:].data))
+
+    data['meanResponse'] = nc_file['meanResponse'][:].data.flatten()
+    data['sdResponse'] = nc_file['sdResponse'][:].data.flatten()
+
+    num_points = int(len(nc_file['meanResponse'][:].flatten()) / len(nc_file['variant'][:].data))
+    data['variant'] = np.tile(nc_file['variant'][:].data, num_points)
+
+    return data
