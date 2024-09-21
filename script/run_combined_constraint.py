@@ -8,7 +8,8 @@ import json
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
-from src.implausibility.combined_implausibility import combined_implausibilities
+from src.multi_var_const.combined_mle import comb_mle_t
+from src.multi_var_const.combined_implausibility import combined_implausibilities
 from src.confidence.combined_frequentist_confidence_set import combined_frequentist_confidence_set
 from src.storage.utils import (runtime,
                                set_up_directories_combined_implaus,
@@ -45,6 +46,11 @@ def main(args):
         eval_params = json.load(file)
 
     run_dirs = eval_params['directories']
+
+    """
+    1a. Run a combined MLE calculation using all comparison variables
+    """
+    comb_mle_t(args, run_dirs, num_variants)
 
     """
     1. Calculate combined implausibility values
