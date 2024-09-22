@@ -38,6 +38,16 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
 
+    if '.nc' in prediction_sets[0]:
+        all_dists_arr, all_varis_arr = calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar)
+
+        return all_dists_arr, all_varis_arr
+    
+    # if '.csv' in prediction_set[0]:
+    #     all_dists_arr, all_varis_arr = calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar)
+        
+    #     return all_dists_arr, all_varis_arr
+
     for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
         # time is a datetime string in this case, but df here has time in hours as float
         my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
@@ -45,6 +55,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         num_pixels = len(my_obs_df_this_time.index)
 
         my_predict_df_this_time = read_in_prediction_data(emulator_folder_path, prediction_set)
+
         my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
         if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
             my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
@@ -84,6 +95,52 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     all_vars_df = pd.concat(allVariances, axis=0).reset_index(drop=True)
 
     return all_dists_df, all_vars_df
+
+def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
+    allDistances = []
+    allVariances = []
+
+    lats = obs_df['latitude'].unqiue()
+    lons = obs_df['longitude'].unique()
+
+    for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
+        # time is a datetime string in this case, but df here has time in hours as float
+        my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
+        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
+
+        mean_res_arr, sd_res_arr = get_nc_data(emulator_folder_path, prediction_set) # dims: lat, lon, variant
+
+        obs_pixel = 0
+        for lat_ind in range(len(lats)):
+            for lon_ind in range(len(lons)):
+                y = my_obs_df_this_time.loc[obs_pixel, 'meanResponse']
+                e = my_obs_df_this_time.loc[obs_pixel, 'sdResponse']**2
+
+                zs = mean_res_arr[lat_ind,lon_ind,:]
+                ss = sd_res_arr[lat_ind,lon_ind,:]**2
+
+                if ~np.isnan(y) and y != 0:
+                    distances = list(y - zs)
+                    variances = list(e + ss)
+                else:
+                    distances = [float('nan')]*len(zs)
+                    variances = [float('nan')]*len(zs)
+                allDistances.append(distances)
+                allVariances.append(variances)
+                obs_pixel += 1
+
+        # print(f'Done with {prediction_set}')
+        progress_bar.update(1)
+    progress_bar.close()
+    return allDistances, allVariances
+
+def get_nc_data(emulator_folder_path, prediction_set):
+    nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
+
+    mean_res_arr = nc_file['meanResponse']
+    sd_res_arr = nc_file['sdResponse']
+
+    return mean_res_arr, sd_res_arr
 
 def read_in_prediction_data(emulator_folder_path, prediction_set):
     if '.nc' in prediction_set:
