@@ -29,6 +29,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     save_here_dir = args.output_dir + run_label + '/'
     emulator_folder_path = eval_params['emulator_output_folder_path']
 
+    # append data into here
     allDistances = []
     allVariances = []
 
@@ -38,6 +39,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
 
+    # run this calc method for nc files
     if '.nc' in prediction_sets[0]:
         all_dists_arr, all_varis_arr = calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar)
 
@@ -97,19 +99,42 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     return all_dists_df, all_vars_df
 
 def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
+    """
+    Function used to calculate the distances and total variances for all emulator variants. Specifically dedicated to netCDF files.
+
+    Arguments:
+    obs_df: pd.DataFrame
+    DataFrame containing the measurement data.
+    emulator_folder_path: str
+    Path to the folder containing emulator predicition data.
+    prediction_sets:[str]
+    File names for all the emulator prediction files.
+    progress_bar: tqdm obj
+    Used to keep track of data calculation progress.
+
+    Returns:
+    allDistances: numpy array
+    Array containing all the distances data (Measurement - Emulator) for all emulator variants.
+    allVarainces: numpy array
+    Array containing all the variances data (Measurement variance + Emulator Variance) for all emulator variants.
+    """
+    # append data into here
     allDistances = []
     allVariances = []
 
+    # dimension of spatial coverage
     lats = obs_df['latitude'].unqiue()
     lons = obs_df['longitude'].unique()
 
     for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
-        # time is a datetime string in this case, but df here has time in hours as float
+        # pick subset of observation data and sort
         my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
         my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
 
+        # get predictions and prediction uncertainties
         mean_res_arr, sd_res_arr = get_nc_data(emulator_folder_path, prediction_set) # dims: lat, lon, variant
 
+        # calc distances and total variances
         obs_pixel = 0
         for lat_ind in range(len(lats)):
             for lon_ind in range(len(lons)):
@@ -129,14 +154,17 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
                 allVariances.append(variances)
                 obs_pixel += 1
 
-        # print(f'Done with {prediction_set}')
+        # update progress bar
         progress_bar.update(1)
+    
+    # close progress bar
     progress_bar.close()
     return allDistances, allVariances
 
 def get_nc_data(emulator_folder_path, prediction_set):
     nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
 
+    # save prediction and prediction uncertainty
     mean_res_arr = nc_file['meanResponse']
     sd_res_arr = nc_file['sdResponse']
 
