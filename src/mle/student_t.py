@@ -14,7 +14,8 @@ sys.path.append(os.getcwd())
 
 def mle_t(args, distances, variances, num_variants):
     """
-    mle analysis using the student t approximation
+    MLE analysis using the student-t distribution approximation.
+
     """
 
     with open(args.input_file,'r') as file:
@@ -24,8 +25,8 @@ def mle_t(args, distances, variances, num_variants):
 
     def minus_log_l(d):
         # get dists for one param set
-        dists = distances.iloc[:,param_set]
-        varis = variances.iloc[:,param_set]
+        dists = distances[:,:,:,param_set].flatten() # dims: time, lat, lon, variant
+        varis = variances[:,:,:,param_set].flatten()
         # Log likelihood, to be maximized
         sigma_opt = d[0]
         nu_opt = d[1]
