@@ -43,6 +43,10 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     if '.nc' in prediction_sets[0]:
         all_dists_arr, all_varis_arr = calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar)
 
+        # convert lists to arrays
+        all_dists_arr = np.array(all_dists_arr)
+        all_varis_arr = np.array(all_varis_arr)
+
         return all_dists_arr, all_varis_arr
     
     # if '.csv' in prediction_set[0]:
@@ -120,12 +124,9 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
     Array containing all the variances data (Measurement variance + Emulator Variance) for all emulator variants.
     Dimensions: (time, latitude, longitude, variant).
     """
-    # append data into here
-    allDistances = []
-    allVariances = []
 
     # dimension of spatial coverage
-    lats = obs_df['latitude'].unqiue()
+    lats = obs_df['latitude'].unique()
     lons = obs_df['longitude'].unique()
 
     #store data for one time here
@@ -182,14 +183,14 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
     
     # close progress bar
     progress_bar.close()
-    return allDistances, allVariances
+    return dists_time_here_arr, varis_time_here_arr
 
 def get_nc_data(emulator_folder_path, prediction_set):
     nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
 
     # save prediction and prediction uncertainty
-    mean_res_arr = nc_file['meanResponse']
-    sd_res_arr = nc_file['sdResponse']
+    mean_res_arr = nc_file['meanResponse'][:,:,:]
+    sd_res_arr = nc_file['sdResponse'][:,:,:]
 
     nc_file.close()
 
