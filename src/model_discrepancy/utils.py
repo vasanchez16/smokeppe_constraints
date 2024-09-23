@@ -191,6 +191,8 @@ def get_nc_data(emulator_folder_path, prediction_set):
     mean_res_arr = nc_file['meanResponse']
     sd_res_arr = nc_file['sdResponse']
 
+    nc_file.close()
+
     return mean_res_arr, sd_res_arr
 
 def read_in_prediction_data(emulator_folder_path, prediction_set):
