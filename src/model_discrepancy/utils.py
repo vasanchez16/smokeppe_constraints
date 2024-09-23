@@ -115,8 +115,10 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
     Returns:
     allDistances: numpy array
     Array containing all the distances data (Measurement - Emulator) for all emulator variants.
+    Dimensions: (time, latitude, longitude, variant).
     allVarainces: numpy array
     Array containing all the variances data (Measurement variance + Emulator Variance) for all emulator variants.
+    Dimensions: (time, latitude, longitude, variant).
     """
     # append data into here
     allDistances = []
@@ -126,6 +128,9 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
     lats = obs_df['latitude'].unqiue()
     lons = obs_df['longitude'].unique()
 
+    #store data for one time here
+    dists_time_here_arr = []
+    varis_time_here_arr = []
     for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
         # pick subset of observation data and sort
         my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
@@ -136,23 +141,41 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
 
         # calc distances and total variances
         obs_pixel = 0
+        # store data for one lat here
+        dists_lat_here_arr = []
+        varis_lat_here_arr = []
         for lat_ind in range(len(lats)):
+            # store data for one lon here
+            dists_lon_here_arr = []
+            varis_lon_here_arr = []
             for lon_ind in range(len(lons)):
+                #get observation data
                 y = my_obs_df_this_time.loc[obs_pixel, 'meanResponse']
                 e = my_obs_df_this_time.loc[obs_pixel, 'sdResponse']**2
 
+                # get emulator data
                 zs = mean_res_arr[lat_ind,lon_ind,:]
                 ss = sd_res_arr[lat_ind,lon_ind,:]**2
 
                 if ~np.isnan(y) and y != 0:
+                    # find observation - emulator difference
                     distances = list(y - zs)
+                    #  find total variance from measurement and emulator
                     variances = list(e + ss)
                 else:
+                    # set dist and varis equal to nan if obs is missing or zero
                     distances = [float('nan')]*len(zs)
                     variances = [float('nan')]*len(zs)
-                allDistances.append(distances)
-                allVariances.append(variances)
                 obs_pixel += 1
+
+                dists_lon_here_arr.append(distances)
+                varis_lon_here_arr.append(variances)
+
+            dists_lat_here_arr.append(dists_lon_here_arr)
+            varis_lat_here_arr.append(varis_lon_here_arr)
+
+        dists_time_here_arr.append(dists_lat_here_arr)
+        varis_time_here_arr.append(varis_lat_here_arr)
 
         # update progress bar
         progress_bar.update(1)
