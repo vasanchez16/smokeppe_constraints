@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import json
 from .utils import calculate_distances_and_variances
-from src.storage.utils import save_dataset, get_em_pred_filenames
+from src.storage.utils import save_dataset, get_em_pred_filenames, save_distances_and_variances
 from .viz import plot_measurements
 
 
@@ -57,16 +57,14 @@ def model_discrepancy(args):
     """
     all_dists_arr, all_vars_arr = calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets)
 
-    save_distances_variances(all_dists_arr, all_vars_arr)
-
-
     """
     Save datasets
     """
-    print('Saving distances.csv...')
-    save_dataset(all_dists_df, save_here_dir + 'distances.csv')
-    print('Saving variances.csv...')
-    save_dataset(all_vars_df, save_here_dir + 'variances.csv')
+    save_distances_and_variances(save_here_dir, all_dists_arr, all_vars_arr, num_variants)
+    # print('Saving distances.csv...')
+    # save_dataset(all_dists_df, save_here_dir + 'distances.csv')
+    # print('Saving variances.csv...')
+    # save_dataset(all_vars_df, save_here_dir + 'variances.csv')
 
 
     return all_dists_arr, all_vars_arr

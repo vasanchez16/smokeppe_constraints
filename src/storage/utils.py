@@ -1,6 +1,9 @@
 import pandas as pd
+import numpy as np
 import os
 import json
+import netCDF4 as nc
+from datetime import datetime
 
 
 def save_dataset(data, save_path):
@@ -13,6 +16,62 @@ def save_dataset(data, save_path):
     """
     data.to_csv(save_path, index=False)
     return
+
+def save_distances_and_variances(save_here_dir, distances, variances, obs_df, num_variants):
+    """
+    Saves the distances and variances calculations into netCDF files.
+    """
+    nc_file = nc.Dataset(save_here_dir + 'distances_variances.nc', 'w', format='NETCDF4')
+
+    # Create dimensions
+    nc_file.createDimension('lat', len(obs_df['latitude'].unique()))
+    nc_file.createDimension('lon', len(obs_df['longitude'].unique()))
+    nc_file.createDimension('variant', num_variants)
+    nc_file.createDimension('time', len(np.unique(obs_df['time'])))
+
+
+    # Create variables
+    lats = nc_file.createVariable('latitude', 'f4', ('lat',))
+    lons = nc_file.createVariable('longitude', 'f4', ('lon',))
+    variants = nc_file.createVariable('variant', 'i4', ('variant',))
+    times = nc_file.createVariable('time', 'f4', ('time',))
+    dists = nc_file.createVariable('distances', 'f4', ('time', 'lat', 'lon', 'variant'))
+    varis = nc_file.createVariable('variances', 'f4', ('time', 'lat', 'lon', 'variant'))
+
+    # Define units for variables
+    lats.units = 'degrees north'
+    lons.units = 'degrees east'
+    dists.units = 'Observation - Emulator' 
+    varis.units = 'Observation variance + Emulator variance'
+    times.units = 'Hours since 01-01-1900 T00:00:00'
+
+    # Write data to the variables
+    lats[:] = obs_df['latitude'].unique()  # Fill latitudes
+    lons[:] = obs_df['longitude'].unique() # Fill longitudes
+    variants[:] = list(range(num_variants))
+
+    # conv times to format for nc file
+    norm_times = get_times_for_nc(np.unique(obs_df['time']))
+    times[:] = norm_times
+
+    # Store dists and varis data
+    dists[:,:,:,:] = distances
+    varis[:,:,:,:] = variances
+    # Add a global attribute
+    nc_file.description = 'Distances and Variances values for constraint calculations.'
+    nc_file.close()
+    return None
+
+def get_times_for_nc(raw_times):
+    basetime = datetime(1900,1,1,0,0,0,0)
+    time_norm_func = lambda t: datetime.strptime(t,'%Y-%m-%d %H:%M:%S') - basetime
+
+    norm_times = []
+    for t in raw_times:
+        time_diff = time_norm_func(t)
+        norm_times.append(time_diff.total_seconds() / 3600)
+    
+    return norm_times
 
 def save_indexed_dataset():
     """
