@@ -33,14 +33,14 @@ def implausibilities(args, my_distances, my_variances):
         my_distances = my_distances + float(mle_df['epsilon'])
 
     # Calculate Impluasibility quantities for every parameter set
-    implausibilities = np.sqrt(np.power(my_distances, 2).div(my_variances_adjusted).sum(axis=0))
+    implausibilities = np.sqrt(np.nansum((my_distances ** 2) / my_variances_adjusted, axis = (0,1,2)))
     implausibilities = pd.DataFrame(implausibilities)
     # Save Implausibility values
     implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=False)
 
     best_param_set_num = implausibilities.sort_values([0]).index[0]
-    save_this = pd.DataFrame([my_distances.iloc[:,best_param_set_num],my_variances.iloc[:,best_param_set_num]],index=['dists','varis']).transpose()
+    save_this = pd.DataFrame([my_distances[:,:,:,best_param_set_num].flatten(),my_variances[:,:,:,best_param_set_num].flatten()],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'mostPlausibleDistsVaris.csv',index=False)
-    save_this = pd.DataFrame([my_distances.iloc[:,mle_param_set_num],my_variances.iloc[:,mle_param_set_num]],index=['dists','varis']).transpose()
+    save_this = pd.DataFrame([my_distances[:,:,:,mle_param_set_num].flatten(),my_variances[:,:,:,mle_param_set_num].flatten()],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
     return
