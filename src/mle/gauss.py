@@ -29,8 +29,8 @@ def mle_gauss(args, distances, variances, num_variants):
         else:
             epsilon = 0
         # get dists for one param set
-        dists = distances.iloc[:,param_set]
-        varis = variances.iloc[:,param_set]
+        dists = distances[:,:,:,param_set].flatten()
+        varis = variances[:,:,:,param_set].flatten()
         # Log likelihood, to be maximized
         term1 = np.nansum(np.log(varis + sigma_opt**2)) #get all the gspts for emulation variant
         term2 = np.nansum(np.power(dists + epsilon, 2) / (varis + sigma_opt**2))
