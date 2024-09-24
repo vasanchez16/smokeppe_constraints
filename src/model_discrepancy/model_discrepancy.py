@@ -38,6 +38,10 @@ def model_discrepancy(args):
     obs_df.sort_values(['time','latitude','longitude'], inplace=True, ignore_index=True)
     snip_subregion_obs = obs_df[obs_df['time'] == np.unique(obs_df['time'])[0]]
 
+
+    """
+    If subregion of data is needed, show this subregion on plot
+    """
     if toggle_filter:
         subregion_filt_idx_set = list((obs_df['latitude'] < lat_min) | (obs_df['longitude'] < lon_min) | (obs_df['latitude'] > lat_max) | (obs_df['longitude'] > lon_max))
         obs_df.loc[subregion_filt_idx_set , ['meanResponse', 'sdResponse']] = [float("nan"), float("nan")]
@@ -61,10 +65,5 @@ def model_discrepancy(args):
     Save datasets
     """
     save_distances_and_variances(save_here_dir, all_dists_arr, all_vars_arr, obs_df, num_variants)
-    # print('Saving distances.csv...')
-    # save_dataset(all_dists_df, save_here_dir + 'distances.csv')
-    # print('Saving variances.csv...')
-    # save_dataset(all_vars_df, save_here_dir + 'variances.csv')
-
 
     return all_dists_arr, all_vars_arr

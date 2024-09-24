@@ -238,8 +238,8 @@ def variant_distribution_comp(args, dists, varis):
     # save dists and varis for selected emulator variants
     for variant in selected_variants:
         df = pd.DataFrame()
-        df['dists'] = dists.iloc[:,variant]
-        df['varis'] = varis.iloc[:,variant]
+        df['dists'] = dists[:,:,:,variant].flatten()
+        df['varis'] = varis[:,:,:,variant].flatten()
 
         if variant == median_variant_num:
             df.to_csv(save_here_dir + 'general_figures/' + 'DistsVaris_med_' + str(variant) + '.csv')
