@@ -49,58 +49,16 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
         return all_dists_arr, all_varis_arr
     
-    # if '.csv' in prediction_set[0]:
-    #     all_dists_arr, all_varis_arr = calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar)
+    if '.csv' in prediction_sets[0]:
+        all_dists_arr, all_varis_arr = calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants)
         
-    #     return all_dists_arr, all_varis_arr
+        # convert lists to arrays
+        all_dists_arr = np.array(all_dists_arr)
+        all_varis_arr = np.array(all_varis_arr)
 
-    for tm, prediction_set in zip(np.unique(my_obs_df.time), prediction_sets):
-        # time is a datetime string in this case, but df here has time in hours as float
-        my_obs_df_this_time = my_obs_df[my_obs_df.time==tm].reset_index(drop=True)
-        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
-        num_pixels = len(my_obs_df_this_time.index)
+        return all_dists_arr, all_varis_arr
 
-        my_predict_df_this_time = read_in_prediction_data(emulator_folder_path, prediction_set)
-
-        my_predict_df_this_time.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
-        if 'meanResponse' not in my_predict_df_this_time.columns and 'mean' in my_predict_df_this_time.columns:
-            my_predict_df_this_time.rename(columns={'mean':'meanResponse'}, inplace=True)
-        if 'sdResponse' not in my_predict_df_this_time.columns and 'std' in my_predict_df_this_time.columns:
-            my_predict_df_this_time.rename(columns={'std':'sdResponse'}, inplace=True)
-        # opens csv data that stores emulated data for each point, csv's are labeled by time
-        # print(f'Read in {prediction_set}')
-
-        my_predict_dfs = [
-            my_predict_df_this_time.iloc[k*num_variants:(k+1)*num_variants, :].reset_index(drop=True)
-            for k in range(num_pixels)
-        ]
-
-        for row in range(num_pixels):
-            y = my_obs_df_this_time.loc[row, 'meanResponse']
-            e = my_obs_df_this_time.loc[row, 'sdResponse']**2
-
-            zs = my_predict_dfs[row]['meanResponse']
-            ss = my_predict_dfs[row]['sdResponse']**2
-
-            if ~np.isnan(y) and y != 0:
-                distances = list(y - zs)
-                variances = list(e + ss)
-            else:
-                distances = [float('nan')]*len(zs)
-                variances = [float('nan')]*len(zs)
-
-            allDistances.append(pd.DataFrame(distances).transpose())
-            allVariances.append(pd.DataFrame(variances).transpose())
-        # print(f'Done with {prediction_set}')
-        progress_bar.update(1)
-    progress_bar.close()
-
-    print('Concatenating distances...')
-    all_dists_df = pd.concat(allDistances, axis=0).reset_index(drop=True)
-    print('Concatenating variances...')
-    all_vars_df = pd.concat(allVariances, axis=0).reset_index(drop=True)
-
-    return all_dists_df, all_vars_df
+    return None
 
 def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar):
     """
@@ -193,6 +151,83 @@ def get_nc_data(emulator_folder_path, prediction_set):
     sd_res_arr = nc_file['sdResponse'][:,:,:]
 
     nc_file.close()
+
+    return mean_res_arr, sd_res_arr
+
+def calcs_for_csv(obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants):
+    """
+    Function used to calculate the distances and total variances for all emulator variants. Specifically dedicated to csv files.
+    """
+    # dimension of spatial coverage
+    lats = obs_df['latitude'].unique()
+    lons = obs_df['longitude'].unique()
+
+    #store data for one time here
+    dists_time_here_arr = []
+    varis_time_here_arr = []
+    for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
+        # pick subset of observation data and sort
+        my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
+        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
+
+        # get predictions and prediction uncertainties
+        mean_res_arr, sd_res_arr = get_csv_data(emulator_folder_path, prediction_set, obs_df, num_variants) # dims: lat, lon, variant
+
+        # calc distances and total variances
+        obs_pixel = 0
+        # store data for one lat here
+        dists_lat_here_arr = []
+        varis_lat_here_arr = []
+        for lat_ind in range(len(lats)):
+            # store data for one lon here
+            dists_lon_here_arr = []
+            varis_lon_here_arr = []
+            for lon_ind in range(len(lons)):
+                #get observation data
+                y = my_obs_df_this_time.loc[obs_pixel, 'meanResponse']
+                e = my_obs_df_this_time.loc[obs_pixel, 'sdResponse']**2
+
+                # get emulator data
+                zs = mean_res_arr[lat_ind,lon_ind,:]
+                ss = sd_res_arr[lat_ind,lon_ind,:]**2
+
+                if ~np.isnan(y) and y != 0:
+                    # find observation - emulator difference
+                    distances = list(y - zs)
+                    #  find total variance from measurement and emulator
+                    variances = list(e + ss)
+                else:
+                    # set dist and varis equal to nan if obs is missing or zero
+                    distances = [float('nan')]*len(zs)
+                    variances = [float('nan')]*len(zs)
+                obs_pixel += 1
+
+                dists_lon_here_arr.append(distances)
+                varis_lon_here_arr.append(variances)
+
+            dists_lat_here_arr.append(dists_lon_here_arr)
+            varis_lat_here_arr.append(varis_lon_here_arr)
+
+        dists_time_here_arr.append(dists_lat_here_arr)
+        varis_time_here_arr.append(varis_lat_here_arr)
+
+        # update progress bar
+        progress_bar.update(1)
+    
+    # close progress bar
+    progress_bar.close()
+    return dists_time_here_arr, varis_time_here_arr
+
+def get_csv_data(emulator_folder_path, prediction_set, obs_df, num_variants):
+
+    prediction_data = pd.read_csv(emulator_folder_path + prediction_set)
+    prediction_data.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
+
+    mean_data = prediction_data['meanResponse'].values
+    sd_data = prediction_data['sdResponse'].values
+
+    mean_res_arr = np.reshape(mean_data,(len(obs_df['latitude'].unique()), len(obs_df['longitude'].unique()), num_variants))
+    sd_res_arr = np.reshape(sd_data,(len(obs_df['latitude'].unique()), len(obs_df['longitude'].unique()), num_variants))
 
     return mean_res_arr, sd_res_arr
 
