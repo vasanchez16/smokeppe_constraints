@@ -17,6 +17,56 @@ def save_dataset(data, save_path):
     data.to_csv(save_path, index=False)
     return
 
+def create_distances_and_variances_base_files(save_here_dir, obs_df, num_variants):
+    """
+    Doc
+    """
+
+    with nc.Dataset(save_here_dir + 'distances_variances.nc', mode="w", format="NETCDF4") as nc_file:
+        # Create dimensions
+        nc_file.createDimension("lat", len(np.unique(obs_df['latitude'])))
+        nc_file.createDimension("lon", len(np.unique(obs_df['longitude'])))
+        nc_file.createDimension("variant", num_variants)
+        nc_file.createDimension("time", None)  # None for unlimited time dimension
+
+        # Create variables
+        lats = nc_file.createVariable('latitude', 'f4', ('lat',))
+        lons = nc_file.createVariable('longitude', 'f4', ('lon',))
+        variants = nc_file.createVariable('variant', 'i4', ('variant',))
+        times = nc_file.createVariable('time', 'f4', ('time',))
+        dists = nc_file.createVariable('distances', 'f4', ('time', 'lat', 'lon', 'variant'))
+        varis = nc_file.createVariable('variances', 'f4', ('time', 'lat', 'lon', 'variant'))
+
+        # Define units for variables
+        lats.units = 'degrees north'
+        lons.units = 'degrees east'
+        dists.units = 'Observation - Emulator' 
+        varis.units = 'Observation variance + Emulator variance'
+        times.units = 'Hours since 01-01-1900 T00:00:00'
+        
+        # Initialize the lat, lon, and variant arrays
+        lats[:] = np.unique(obs_df['latitude'])  # Fill latitudes
+        lons[:] = np.unique(obs_df['longitude']) # Fill longitudes
+        variants[:] = list(range(num_variants))
+
+    return None
+
+def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_one_time, obs_time, index):
+    """
+    doc
+    """
+    with nc.Dataset(save_here_dir + 'distances_variances.nc', mode="a") as nc_file:
+        # Append the time value
+        adj_time = get_adj_time(obs_time)
+        nc_file.variables["time"][index:index+1] = np.array([adj_time])
+        
+        # Append the data for this time step
+        nc_file.variables["distances"][index, :, :, :] = dists_one_time
+        nc_file.variables["variances"][index, :, :, :] = varis_one_time
+
+
+    return None
+
 def save_distances_and_variances(save_here_dir, distances, variances, obs_df, num_variants):
     """
     Saves the distances and variances calculations into netCDF files.
@@ -61,6 +111,15 @@ def save_distances_and_variances(save_here_dir, distances, variances, obs_df, nu
     nc_file.description = 'Distances and Variances values for constraint calculations.'
     nc_file.close()
     return None
+
+def get_adj_time(raw_date):
+    basetime = datetime(1900,1,1,0,0,0,0)
+
+    adj_time = datetime.strptime(raw_date,'%Y-%m-%d %H:%M:%S') - basetime
+
+    adj_time = adj_time.total_seconds() / 3600
+
+    return adj_time
 
 def get_times_for_nc(raw_times):
     basetime = datetime(1900,1,1,0,0,0,0)

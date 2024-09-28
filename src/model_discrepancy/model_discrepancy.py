@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import json
 from .utils import calculate_distances_and_variances
-from src.storage.utils import save_dataset, get_em_pred_filenames, save_distances_and_variances
+from src.storage.utils import save_dataset, get_em_pred_filenames, save_distances_and_variances, create_distances_and_variances_base_files
 from .viz import plot_measurements
 
 
@@ -56,6 +56,8 @@ def model_discrepancy(args):
 
     prediction_sets = get_em_pred_filenames(args)
 
+    create_distances_and_variances_base_files(save_here_dir, obs_df, num_variants)
+
     """
     Calculate distances and variances
     """
@@ -64,6 +66,6 @@ def model_discrepancy(args):
     """
     Save datasets
     """
-    save_distances_and_variances(save_here_dir, all_dists_arr, all_vars_arr, obs_df, num_variants)
+    # save_distances_and_variances(save_here_dir, all_dists_arr, all_vars_arr, obs_df, num_variants)
 
     return all_dists_arr, all_vars_arr
