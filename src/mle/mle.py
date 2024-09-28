@@ -7,7 +7,7 @@ from .student_t import mle_t
 import json
 
 
-def mle(args, my_distances, my_variances):
+def mle(args):
     """
     Collect datasets
     """
@@ -31,9 +31,9 @@ def mle(args, my_distances, my_variances):
     if stats_dist_method == 'convolution':
         raise NotImplementedError('Laplace approximation by convolution method not implemented')
     elif 'student-t' in stats_dist_method:
-        opt_vals,col_names = mle_t(args, my_distances, my_variances, num_variants)
+        opt_vals,col_names = mle_t(args, num_variants)
     elif 'gaussian' in stats_dist_method:
-        opt_vals,col_names = mle_gauss(args, my_distances, my_variances, num_variants)
+        opt_vals,col_names = mle_gauss(args, num_variants)
 
     """
     Save datasets

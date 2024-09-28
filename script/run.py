@@ -55,21 +55,21 @@ def main(args):
     """
     2. Estimate model discrepancy
     """
-    distances, variances = model_discrepancy(args)
+    model_discrepancy(args)
     print(runtime(time.time() - start_time))
 
     """
     3. Compute MLE
     """
-    mle(args, distances, variances)
+    mle(args)
     print(runtime(time.time() - start_time))
 
     """
     4. Compute implausibilities
     """
-    implausibilities(args, distances, variances)
-    if stats_dist_method == 'student-t_bootstrap':
-        variant_distribution_comp(args, distances, variances)
+    implausibilities(args)
+    # if stats_dist_method == 'student-t_bootstrap':
+    #     variant_distribution_comp(args)
     print(runtime(time.time() - start_time))
 
     """

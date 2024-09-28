@@ -13,7 +13,7 @@ from src.storage.utils import save_dataset
 sys.path.append(os.getcwd())
 
 
-def mle_t(args, distances, variances, num_variants):
+def mle_t(args, num_variants):
     """
     MLE analysis using the student-t distribution approximation.
 
