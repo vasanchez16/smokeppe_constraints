@@ -30,10 +30,6 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     save_here_dir = args.output_dir + run_label + '/'
     emulator_folder_path = eval_params['emulator_output_folder_path']
 
-    # append data into here
-    allDistances = []
-    allVariances = []
-
     my_obs_df = obs_df.copy()
     idxSet = (obs_df['meanResponse'] == 0) | (np.isnan(obs_df['meanResponse']))
     # set missing
@@ -42,13 +38,9 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
     # run this calc method for nc files
     if '.nc' in prediction_sets[0]:
-        all_dists_arr, all_varis_arr = calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir)
+        calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir)
 
-        # convert lists to arrays
-        all_dists_arr = np.array(all_dists_arr)
-        all_varis_arr = np.array(all_varis_arr)
-
-        return all_dists_arr, all_varis_arr
+        return None
     
     if '.csv' in prediction_sets[0]:
         all_dists_arr, all_varis_arr = calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir)
@@ -57,7 +49,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         all_dists_arr = np.array(all_dists_arr)
         all_varis_arr = np.array(all_varis_arr)
 
-        return all_dists_arr, all_varis_arr
+        return None
 
     return None
 
@@ -88,9 +80,6 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
     lats = obs_df['latitude'].unique()
     lons = obs_df['longitude'].unique()
 
-    #store data for one time here
-    dists_time_here_arr = []
-    varis_time_here_arr = []
     time_ind = 0
     for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
         # pick subset of observation data and sort
@@ -135,10 +124,8 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
             dists_lat_here_arr.append(dists_lon_here_arr)
             varis_lat_here_arr.append(varis_lon_here_arr)
 
+        # saves dists and varis for one time output to existing nc file
         save_distances_and_variances_one_time(save_here_dir, dists_lat_here_arr, varis_lat_here_arr, tm, time_ind)
-
-        # dists_time_here_arr.append(dists_lat_here_arr)
-        # varis_time_here_arr.append(varis_lat_here_arr)
 
         # update progress bar
         time_ind += 1
@@ -146,7 +133,7 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
     
     # close progress bar
     progress_bar.close()
-    return dists_time_here_arr, varis_time_here_arr
+    return None
 
 def get_nc_data(emulator_folder_path, prediction_set):
     nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
@@ -235,27 +222,3 @@ def get_csv_data(emulator_folder_path, prediction_set, obs_df, num_variants):
     sd_res_arr = np.reshape(sd_data,(len(obs_df['latitude'].unique()), len(obs_df['longitude'].unique()), num_variants))
 
     return mean_res_arr, sd_res_arr
-
-def read_in_prediction_data(emulator_folder_path, prediction_set):
-    if '.nc' in prediction_set:
-        data = read_nc_pred_file(emulator_folder_path, prediction_set)
-    elif '.csv' in prediction_set:
-        data = pd.read_csv(emulator_folder_path + prediction_set)
-    return data
-
-def read_nc_pred_file(emulator_folder_path, prediction_set):
-    nc_file = nc.Dataset(emulator_folder_path + prediction_set, 'r', format='NETCDF4')
-
-    data = pd.DataFrame()
-    lats = [lat for lat in nc_file['latitude'][:].data for lon in nc_file['longitude'][:].data]
-    data['latitude'] = np.repeat(lats,len(nc_file['variant'][:].data))
-    lons = [lon for lat in nc_file['latitude'][:].data for lon in nc_file['longitude'][:].data]
-    data['longitude'] = np.repeat(lons,len(nc_file['variant'][:].data))
-
-    data['meanResponse'] = nc_file['meanResponse'][:].data.flatten()
-    data['sdResponse'] = nc_file['sdResponse'][:].data.flatten()
-
-    num_points = int(len(nc_file['meanResponse'][:].flatten()) / len(nc_file['variant'][:].data))
-    data['variant'] = np.tile(nc_file['variant'][:].data, num_points)
-
-    return data
