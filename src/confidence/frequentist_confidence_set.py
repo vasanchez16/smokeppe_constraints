@@ -14,7 +14,7 @@ from .utils import (get_implaus_thresh_t,
 from .viz import plot_constraint_1d, all_param_implaus
 
 
-def frequentist_confidence_set(args, distances, variances):
+def frequentist_confidence_set(args):
     """
     Notes here
     """
@@ -31,7 +31,7 @@ def frequentist_confidence_set(args, distances, variances):
     stats_dist_method = eval_params['stats_distribution_method']
     satellite_file_path = eval_params['satellite_file_path']
 
-    implausibilities = pd.read_csv(save_here_dir + 'implausibilities.csv')
+    implausibilities_df = pd.read_csv(save_here_dir + 'implausibilities.csv')
     inputs_df = pd.read_csv(inputs_file_path)
     obs_df = pd.read_csv(satellite_file_path)
 
@@ -64,8 +64,8 @@ def frequentist_confidence_set(args, distances, variances):
     cv = cv / np.sqrt(num_points)
     print(f'Implausibility Threshold: {round(cv,2)}')
 
-    implausibilities = implausibilities / np.sqrt(num_points)
-    norm_implaus = pd.DataFrame(implausibilities)
+    implausibilities = implausibilities_df['I'].values / np.sqrt(num_points)
+    norm_implaus = pd.DataFrame(implausibilities, columns = ['I_norm'])
     # Save norm Implausibility values
     norm_implaus.to_csv(save_here_dir + 'norm_implausibilities.csv', index=False)
     
