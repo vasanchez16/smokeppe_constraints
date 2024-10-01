@@ -15,17 +15,12 @@ sys.path.append(os.getcwd())
 
 
 # Moved outside mle_t function
-def run_opt(variant, nc_file_path, init_vals, bnds):
+def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     # Open the NetCDF file within the process
-    # with nc.Dataset(nc_file_path, 'r') as open_nc_file:
-    #     dists_here = open_nc_file['distances'][:,:,:,variant].flatten()
-    #     varis_here = open_nc_file['variances'][:,:,:,variant].flatten()
-    if variant == 0:
-        print('getting data...')
-    dists_here = open_nc_file['distances'][:,:,:,variant].flatten()
-    varis_here = open_nc_file['variances'][:,:,:,variant].flatten()
-    if variant == 0:
-        print('done getting data.')
+    with nc.Dataset(nc_file_path, 'r') as open_nc_file:
+        dists_here = open_nc_file['distances'][:,:,:,variant_adj].flatten()
+        varis_here = open_nc_file['variances'][:,:,:,variant_adj].flatten()
+    
     x_0 = init_vals
     if len(init_vals) > 2:
         res = minimize(minus_log_l_with_epsilon, x_0, args=(dists_here, varis_here), bounds=[tuple(b) for b in bnds], method='Nelder-Mead')
@@ -37,6 +32,8 @@ def run_opt(variant, nc_file_path, init_vals, bnds):
 
     if variant % 10 == 0:
         print(f'Variant: {variant}')
+
+    res_arr = [str(el) for el in res_arr]
     
     return res_arr
 
@@ -79,36 +76,60 @@ def mle_t(args, num_variants):
 
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
-    nc_file_path = save_here_dir + 'distances_variances.nc'
+    path_to_data_files = save_here_dir + 'dists_varis_data/'
 
-    # Parallelization
-    print('reading...')
-    global open_nc_file 
-    open_nc_file = nc.Dataset(nc_file_path,'r')
-    print('done reading')
-    
-    def execute_calculations():
-        with mp.Pool(processes=mp.cpu_count()) as pool:
-            futures = [pool.apply_async(run_opt, args=(variant, nc_file_path, init_vals, bnds)) for variant in range(num_variants)]
+    progress_file_path =  save_here_dir + 'mle_progress.txt'
 
-            data_arr = [future.get() for future in futures]
-        return data_arr
+    if not os.path.exists(progress_file_path):
+        with open(progress_file_path, 'w') as new_prog_file:
+            new_prog_file.write('')
 
-    mle_arr = execute_calculations()
-    open_nc_file.close()
-    # Save data
-    cols_here = ['parameter_set_num', 'variance_mle', 'nu', 'epsilon', 'log_L'] if len(init_vals) > 2 else ['parameter_set_num', 'variance_mle', 'nu', 'log_L']
-    all_mle_df = pd.DataFrame(mle_arr, columns=cols_here)
-    save_dataset(all_mle_df, save_here_dir + 'all_mle.csv')
+    data_files = os.listdir(path_to_data_files)
 
-    # Sort by log likelihood (last column)
-    mle_arr = sorted(mle_arr, key=lambda x: x[-1], reverse=True)
+    for file in data_files:
 
-    # Get optimized values
-    optimized_vals = [mle_arr[0][0], mle_arr[0][1], mle_arr[0][2]]
-    if len(init_vals) > 2:
-        optimized_vals.append(mle_arr[0][3])
+        # tracking completed files
+        with open(progress_file_path,'r') as prog_file:
+            contents = prog_file.read()
+        current_completed_data_files = contents.split('\n')
+        if file in current_completed_data_files:
+            continue
+        with open(progress_file_path, 'a') as prog_file:
+            prog_file.write('\n' + file)
 
-    optimized_vals.append(mle_arr[0][-1])
+        # Parallelization
+        nc_file_path = path_to_data_files + file
+
+        with nc.Dataset(nc_file_path, 'r') as nc_file:
+            variants = nc_file['variant'][:].data
+        min_variant = min(variants)
+        variants_adj = [v - min_variant for v in variants]
+
+        def execute_calculations():
+            with mp.Pool(processes=mp.cpu_count()) as pool:
+                futures = [pool.apply_async(run_opt, args=(variant_adj, variant, nc_file_path, init_vals, bnds)) for variant_adj, variant in zip(variants_adj, variants)]
+
+                data_arr = [future.get() for future in futures]
+            return data_arr
+
+        mle_arr = execute_calculations()
+
+        # Save data
+        cols_here = ['parameter_set_num', 'variance_mle', 'nu', 'epsilon', 'log_L'] if len(init_vals) > 2 else ['parameter_set_num', 'variance_mle', 'nu', 'log_L']
+        if not os.path.exists(save_here_dir + 'all_mle.csv'):
+            with open(save_here_dir + 'all_mle.csv', 'w') as file:
+                file.write(','.join(cols_here) + '\n')
+
+        mle_arr = [','.join(i) for i in mle_arr]
+        mle_results = '\n'.join(mle_arr) + '\n'
+
+        with open(save_here_dir + 'all_mle.csv', 'a') as file:
+            file.write(mle_results)
+
+    all_mle = pd.read_csv(save_here_dir + 'all_mle.csv')
+    likelihood_vals = all_mle['log_L'].values
+    mle_param_ind = np.argmax(likelihood_vals)
+    optimized_vals = all_mle.iloc[mle_param_ind,:]
+
 
     return optimized_vals, cols_here
