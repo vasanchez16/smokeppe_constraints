@@ -6,7 +6,7 @@ import netCDF4 as nc
 from src.storage.utils import save_distances_and_variances_one_time
 
 
-def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets):
+def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets, variant_subsets):
     """
     Calculate distances and variances based on the given inputs and observations.
 
@@ -38,7 +38,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
     # run this calc method for nc files
     if '.nc' in prediction_sets[0]:
-        calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir)
+        calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir, variant_subsets)
 
         return None
     
@@ -53,7 +53,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
     return None
 
-def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir):
+def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir, variant_subsets):
     """
     Function used to calculate the distances and total variances for all emulator variants. Specifically dedicated to netCDF files.
 
@@ -125,7 +125,7 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
             varis_lat_here_arr.append(varis_lon_here_arr)
 
         # saves dists and varis for one time output to existing nc file
-        save_distances_and_variances_one_time(save_here_dir, dists_lat_here_arr, varis_lat_here_arr, tm, time_ind)
+        save_distances_and_variances_one_time(save_here_dir, dists_lat_here_arr, varis_lat_here_arr, tm, time_ind, variant_subsets)
 
         # update progress bar
         time_ind += 1

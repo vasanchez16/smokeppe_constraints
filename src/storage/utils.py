@@ -17,16 +17,27 @@ def save_dataset(data, save_path):
     data.to_csv(save_path, index=False)
     return
 
-def create_distances_and_variances_base_files(save_here_dir, obs_df, num_variants):
+def get_variant_subsets(num_variants, subset_size):
+    variants_list = list(range(num_variants))
+
+    number_of_subsets = int(np.ceil(num_variants / subset_size))
+
+    variant_subsets = []
+    for i in range(number_of_subsets):
+        variant_subsets.append(variants_list[i*subset_size:(i+1)*subset_size])
+    
+    return variant_subsets
+
+def create_distances_and_variances_base_files(save_here_dir, obs_df, variant_subset):
     """
     Doc
     """
-
-    with nc.Dataset(save_here_dir + 'distances_variances.nc', mode="w", format="NETCDF4") as nc_file:
+    max_variant = max(variant_subset)
+    with nc.Dataset(save_here_dir + 'dists_varis_data/' + f'distances_variances_{max_variant}.nc', mode="w", format="NETCDF4") as nc_file:
         # Create dimensions
         nc_file.createDimension("lat", len(np.unique(obs_df['latitude'])))
         nc_file.createDimension("lon", len(np.unique(obs_df['longitude'])))
-        nc_file.createDimension("variant", num_variants)
+        nc_file.createDimension("variant", len(variant_subset))
         nc_file.createDimension("time", None)  # None for unlimited time dimension
 
         # Create variables
@@ -47,22 +58,28 @@ def create_distances_and_variances_base_files(save_here_dir, obs_df, num_variant
         # Initialize the lat, lon, and variant arrays
         lats[:] = np.unique(obs_df['latitude'])  # Fill latitudes
         lons[:] = np.unique(obs_df['longitude']) # Fill longitudes
-        variants[:] = list(range(num_variants))
+        variants[:] = variant_subset
 
     return None
 
-def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_one_time, obs_time, index):
+def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_one_time, obs_time, index, variant_subsets):
     """
     doc
     """
-    with nc.Dataset(save_here_dir + 'distances_variances.nc', mode="a") as nc_file:
-        # Append the time value
-        adj_time = get_adj_time(obs_time)
-        nc_file.variables["time"][index:index+1] = np.array([adj_time])
-        
-        # Append the data for this time step
-        nc_file.variables["distances"][index, :, :, :] = dists_one_time
-        nc_file.variables["variances"][index, :, :, :] = varis_one_time
+    for subset in variant_subsets:
+        max_variant = max(subset)
+
+        with nc.Dataset(save_here_dir + 'dists_varis_data/' +  f'distances_variances_{max_variant}.nc', mode="a") as nc_file:
+            # Append the time value
+            adj_time = get_adj_time(obs_time)
+            nc_file.variables["time"][index:index+1] = np.array([adj_time])
+            
+            dists_one_time = np.array(dists_one_time)
+            varis_one_time = np.array(varis_one_time)
+
+            # Append the data for this time step
+            nc_file.variables["distances"][index, :, :, :] = dists_one_time[:,:,subset]
+            nc_file.variables["variances"][index, :, :, :] = varis_one_time[:,:,subset]
 
 
     return None
@@ -158,6 +175,9 @@ def set_up_directories(args):
     
     if not os.path.exists(args.output_dir + run_label + '/general_figures/movie_pngs'):
         os.mkdir(args.output_dir + run_label + '/general_figures/movie_pngs')
+
+    if not os.path.exists(args.output_dir + run_label + '/dists_varis_data'):
+        os.mkdir(args.output_dir + run_label +  '/dists_varis_data')
 
     return
 
