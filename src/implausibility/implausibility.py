@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import json
 import netCDF4 as nc
-from concurrent.futures import ThreadPoolExecutor
+import multiprocessing as mp
 from .utils import calculate_implausibility
 
 
@@ -18,6 +18,7 @@ def implausibilities(args):
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
     stats_dist_method = eval_params['stats_distribution_method']
+    path_to_data_files = save_here_dir + 'dists_varis_data/'
 
     inputs_file_path = eval_params['emulator_inputs_file_path']
     inputs_df = pd.read_csv(inputs_file_path)
@@ -25,7 +26,7 @@ def implausibilities(args):
 
     # Read in necessary statistics
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
-    mle_variant = mle_df['parameter_set_num']
+    mle_variant = int(mle_df['parameter_set_num'])
 
     # unpack values
     additional_variance = float(mle_df['variance_mle'])
@@ -39,41 +40,58 @@ def implausibilities(args):
     else:
         nu = 0
 
-    # get distances and variances data
-    nc_file = nc.Dataset(save_here_dir + 'distances_variances.nc', 'r')
+    # get distances and variances data files
+    data_files = os.listdir(path_to_data_files)
 
     # parallelization algo
     def execute_calculations():
-        with ThreadPoolExecutor(max_workers=64) as executor:
-            futures = [executor.submit(calculate_implausibility, variant, nc_file, stats_dist_method, variance_mle = additional_variance, nu = nu, epsilon = epsilon) for variant in range(num_variants)]
-            data_arr = [future.result() for future in futures]
+        with mp.Pool(processes=mp.cpu_count()) as pool:
+            futures = [pool.apply_async(calculate_implausibility, args = (path_to_data_files + file, stats_dist_method, additional_variance, nu, epsilon)) for file in data_files]
+            data_arr = [future.get() for future in futures]
 
-            # Concatenate all predictions into a single DataFrame
-            return data_arr
+        # Concatenate all predictions into a single DataFrame
+        return data_arr
 
     implaus_arr = execute_calculations()
 
-
-    # This does not pass when bootstrap is requested (stats_dist_method='student-t_bootstrap')
-    if stats_dist_method == 'student-t':
-        nu_opt = float(mle_df['nu'])
-        my_variances_adjusted = my_variances_adjusted * ((nu_opt-2)/nu_opt)
-    
-    if 'epsilon' in mle_df.columns:
-        my_distances = my_distances + float(mle_df['epsilon'])
-
+    implaus_arr = [np.array(i) for i in implaus_arr]
+    implaus_arr = np.concatenate(implaus_arr)
+    print(implaus_arr[0])
+    print(len(implaus_arr[0]))
+    print(type(implaus_arr[0][0]))
+    print(implaus_arr[0][1])
+    # error
     # Calculate Impluasibility quantities for every parameter set
     implausibilities = pd.DataFrame(implaus_arr, columns = ['variant', 'I'])
+    implausibilities.sort_values(['variant'], ignore_index=True, inplace=True)
+    implausibilities.get('variant').apply(lambda x: int(x))
     # Save Implausibility values
     implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=False)
 
     best_param_set_num = implausibilities.sort_values(['I']).index[0]
 
-    save_this = pd.DataFrame([nc_file['distances'][:,:,:,best_param_set_num].flatten(),nc_file['variances'][:,:,:,best_param_set_num].flatten()],index=['dists','varis']).transpose()
+    data_files_nums = [int(f.split('_')[2].split('.nc')[0]) for f in data_files]
+    diff_nums = np.array([t - mle_variant for t in data_files_nums])
+    closest_num = min(diff_nums[diff_nums >= 0])
+    mle_data_file_ind = np.argmax(diff_nums == closest_num)
+    diff_nums = np.array([t - best_param_set_num for t in data_files_nums])
+    closest_num = min(diff_nums[diff_nums >= 0])
+    best_param_data_file_ind = np.argmax(diff_nums == closest_num)
+    
+    nc_file = nc.Dataset(path_to_data_files + data_files[best_param_data_file_ind],'r')
+    variants = nc_file['variant'][:].data
+    min_variant = min(variants)
+    get_this_ind = best_param_set_num - min_variant
+    save_this = pd.DataFrame([nc_file['distances'][:,:,:,get_this_ind].flatten(),nc_file['variances'][:,:,:,get_this_ind].flatten()],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'mostPlausibleDistsVaris.csv',index=False)
-    save_this = pd.DataFrame([nc_file['distances'][:,:,:,mle_variant].flatten(),nc_file['variances'][:,:,:,mle_variant].flatten()],index=['dists','varis']).transpose()
-    save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
+    nc_file.close()
 
+    nc_file = nc.Dataset(path_to_data_files + data_files[mle_data_file_ind],'r')
+    variants = nc_file['variant'][:].data
+    min_variant = min(variants)
+    get_this_ind = mle_variant - min_variant
+    save_this = pd.DataFrame([nc_file['distances'][:,:,:,get_this_ind].flatten(),nc_file['variances'][:,:,:,get_this_ind].flatten()],index=['dists','varis']).transpose()
+    save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
     nc_file.close()
 
     return None
