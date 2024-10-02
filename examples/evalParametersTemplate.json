@@ -20,5 +20,6 @@
     "MLE_optimization":{
         "bounds": "Value bounds for the MLE optimizer i.e. [[1,2],[3,4]]",
         "initial_vals":"Initial values for the MLE optimizer i.e. [1.5,3.5]"
-    }
+    },
+    "subset_size": "int: The size the distances file will be split into, this is useful for computational efficiency"
 }
