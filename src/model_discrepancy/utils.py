@@ -107,7 +107,7 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
                 zs = mean_res_arr[lat_ind,lon_ind,:]
                 ss = sd_res_arr[lat_ind,lon_ind,:]**2
 
-                if ~np.isnan(y) and y != 0:
+                if ~np.isnan(y) and y != 0 and e != 0:
                     # find observation - emulator difference
                     distances = list(y - zs)
                     #  find total variance from measurement and emulator
