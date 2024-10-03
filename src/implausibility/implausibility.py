@@ -42,6 +42,7 @@ def implausibilities(args):
 
     # get distances and variances data files
     data_files = os.listdir(path_to_data_files)
+    data_files = sorted(data_files, key=lambda f: int(f.split('_')[-1].split('.')[0]))
 
     # parallelization algo
     def execute_calculations():
@@ -56,15 +57,11 @@ def implausibilities(args):
 
     implaus_arr = [np.array(i) for i in implaus_arr]
     implaus_arr = np.concatenate(implaus_arr)
-    print(implaus_arr[0])
-    print(len(implaus_arr[0]))
-    print(type(implaus_arr[0][0]))
-    print(implaus_arr[0][1])
-    # error
+    
     # Calculate Impluasibility quantities for every parameter set
     implausibilities = pd.DataFrame(implaus_arr, columns = ['variant', 'I'])
-    implausibilities.sort_values(['variant'], ignore_index=True, inplace=True)
-    implausibilities.get('variant').apply(lambda x: int(x))
+    # implausibilities.sort_values(['variant'], ignore_index=True, inplace=True)
+    # implausibilities.get('variant').apply(lambda x: int(x))
     # Save Implausibility values
     implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=False)
 

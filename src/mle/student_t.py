@@ -30,7 +30,7 @@ def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     res_arr = [variant] + [res_var**2 if i == 0 else res_var for i, res_var in enumerate(res.x)]
     res_arr.append(-res.fun)
 
-    if variant % 10 == 0:
+    if variant % 5000 == 0:
         print(f'Variant: {variant}')
 
     res_arr = [str(el) for el in res_arr]
@@ -85,6 +85,7 @@ def mle_t(args, num_variants):
             new_prog_file.write('')
 
     data_files = os.listdir(path_to_data_files)
+    data_files = sorted(data_files, key=lambda f: int(f.split('_')[-1].split('.')[0]))
 
     for file in data_files:
 
@@ -117,14 +118,15 @@ def mle_t(args, num_variants):
         # Save data
         cols_here = ['parameter_set_num', 'variance_mle', 'nu', 'epsilon', 'log_L'] if len(init_vals) > 2 else ['parameter_set_num', 'variance_mle', 'nu', 'log_L']
         if not os.path.exists(save_here_dir + 'all_mle.csv'):
-            with open(save_here_dir + 'all_mle.csv', 'w') as file:
-                file.write(','.join(cols_here) + '\n')
+            with open(save_here_dir + 'all_mle.csv', 'w') as mle_file:
+                mle_file.write(','.join(cols_here) + '\n')
 
         mle_arr = [','.join(i) for i in mle_arr]
         mle_results = '\n'.join(mle_arr) + '\n'
 
-        with open(save_here_dir + 'all_mle.csv', 'a') as file:
-            file.write(mle_results)
+        with open(save_here_dir + 'all_mle.csv', 'a') as mle_file:
+            mle_file.write(mle_results)
+        print(f'{file} complete.')
 
     all_mle = pd.read_csv(save_here_dir + 'all_mle.csv')
     likelihood_vals = all_mle['log_L'].values
