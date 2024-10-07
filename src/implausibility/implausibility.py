@@ -40,32 +40,46 @@ def implausibilities(args):
     else:
         nu = 0
 
+    with open(save_here_dir + 'implausibilities.csv', 'w') as implaus_file:
+        implaus_file.write('variant,I' + '\n')
+
+    min_implaus_arr = []
+
     # get distances and variances data files
     data_files = os.listdir(path_to_data_files)
     data_files = sorted(data_files, key=lambda f: int(f.split('_')[-1].split('.')[0]))
 
-    # parallelization algo
+    num_processes = min(mp.cpu_count(), len(data_files))
+
     def execute_calculations():
-        with mp.Pool(processes=mp.cpu_count()) as pool:
-            futures = [pool.apply_async(calculate_implausibility, args = (path_to_data_files + file, stats_dist_method, additional_variance, nu, epsilon)) for file in data_files]
+        with mp.Pool(processes=6) as pool:
+            futures = [pool.apply_async(calculate_implausibility, args=(path_to_data_files + file, stats_dist_method, additional_variance, nu, epsilon)) for file in data_files]
             data_arr = [future.get() for future in futures]
-
-        # Concatenate all predictions into a single DataFrame
+                        
         return data_arr
-
-    implaus_arr = execute_calculations()
-
-    implaus_arr = [np.array(i) for i in implaus_arr]
-    implaus_arr = np.concatenate(implaus_arr)
     
-    # Calculate Impluasibility quantities for every parameter set
-    implausibilities = pd.DataFrame(implaus_arr, columns = ['variant', 'I'])
-    # implausibilities.sort_values(['variant'], ignore_index=True, inplace=True)
-    # implausibilities.get('variant').apply(lambda x: int(x))
-    # Save Implausibility values
-    implausibilities.to_csv(save_here_dir + 'implausibilities.csv', index=False)
+    many_implaus_arrs = execute_calculations()
 
-    best_param_set_num = implausibilities.sort_values(['I']).index[0]
+    for chunk, file in zip(many_implaus_arrs, data_files):
+        print(f'Appending Implaus for {file}...')
+        chunk_str = [','.join(i) for i in chunk]
+        chunk_str = '\n'.join(chunk_str) + '\n'
+
+        best_variant_data_here = sorted(chunk, key=lambda x: float(x[-1]))[0]
+
+        # saving minimum implaus
+        if file == data_files[0]:
+            min_implaus_arr = best_variant_data_here
+        else:
+            if best_variant_data_here[-1] < min_implaus_arr[-1]:
+                min_implaus_arr = best_variant_data_here
+            else:
+                None
+
+        with open(save_here_dir + 'implausibilities.csv', 'a') as implaus_file:
+            implaus_file.write(chunk_str)
+    
+    best_param_set_num = int(min_implaus_arr[0])
 
     data_files_nums = [int(f.split('_')[2].split('.nc')[0]) for f in data_files]
     diff_nums = np.array([t - mle_variant for t in data_files_nums])
