@@ -68,8 +68,8 @@ def main(args):
     4. Compute implausibilities
     """
     implausibilities(args)
-    # if stats_dist_method == 'student-t_bootstrap':
-    #     variant_distribution_comp(args)
+    if stats_dist_method == 'student-t_bootstrap':
+        variant_distribution_comp(args, None, None)
     print(runtime(time.time() - start_time))
 
     """

@@ -220,7 +220,7 @@ def variant_distribution_comp(args, dists, varis):
         epsilon = float(mle_df['epsilon'])
 
     # get median performing variant
-    implaus.sort_values(['0'], inplace=True)
+    implaus.sort_values(['I'], inplace=True)
     median_ind = int((num_variants/2) - 1)
     median_variant_num = implaus.iloc[median_ind,:].name
 
@@ -233,7 +233,7 @@ def variant_distribution_comp(args, dists, varis):
     all_variants.remove(median_variant_num)
 
     selected_variants = list(np.random.choice(all_variants,0,replace=False))
-    selected_variants.append(median_variant_num)
+    # selected_variants.append(median_variant_num)
 
     # save dists and varis for selected emulator variants
     for variant in selected_variants:
@@ -287,8 +287,8 @@ def variant_distribution_comp(args, dists, varis):
         mins_arr.append(np.nanmin(test_stat))
         maxs_arr.append(np.nanmax(test_stat))
 
-    range_min = min(np.nanmin(mle_test_stat), np.nanmin(sim_t), min(mins_arr))
-    range_max = max(np.nanmax(mle_test_stat), np.nanmax(sim_t), max(maxs_arr))
+    range_min = min(np.nanmin(mle_test_stat), np.nanmin(sim_t))#, min(mins_arr))
+    range_max = max(np.nanmax(mle_test_stat), np.nanmax(sim_t))#, max(maxs_arr))
 
 
     plt.hist(
