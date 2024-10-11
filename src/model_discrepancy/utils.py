@@ -43,11 +43,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
         return None
     
     if '.csv' in prediction_sets[0]:
-        all_dists_arr, all_varis_arr = calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir)
-        
-        # convert lists to arrays
-        all_dists_arr = np.array(all_dists_arr)
-        all_varis_arr = np.array(all_varis_arr)
+        calcs_for_csv(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir, variant_subsets)
 
         return None
 
@@ -146,17 +142,15 @@ def get_nc_data(emulator_folder_path, prediction_set):
 
     return mean_res_arr, sd_res_arr
 
-def calcs_for_csv(obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir):
+def calcs_for_csv(obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir, variant_subsets):
     """
     Function used to calculate the distances and total variances for all emulator variants. Specifically dedicated to csv files.
     """
     # dimension of spatial coverage
     lats = obs_df['latitude'].unique()
     lons = obs_df['longitude'].unique()
-
-    #store data for one time here
-    dists_time_here_arr = []
-    varis_time_here_arr = []
+    
+    time_ind = 0
     for tm, prediction_set in zip(np.unique(obs_df.time), prediction_sets):
         # pick subset of observation data and sort
         my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
@@ -200,15 +194,16 @@ def calcs_for_csv(obs_df, emulator_folder_path, prediction_sets, progress_bar, n
             dists_lat_here_arr.append(dists_lon_here_arr)
             varis_lat_here_arr.append(varis_lon_here_arr)
 
-        dists_time_here_arr.append(dists_lat_here_arr)
-        varis_time_here_arr.append(varis_lat_here_arr)
+        # saves dists and varis for one time output to existing nc file
+        save_distances_and_variances_one_time(save_here_dir, dists_lat_here_arr, varis_lat_here_arr, tm, time_ind, variant_subsets)
 
         # update progress bar
+        time_ind += 1
         progress_bar.update(1)
     
     # close progress bar
     progress_bar.close()
-    return dists_time_here_arr, varis_time_here_arr
+    return None
 
 def get_csv_data(emulator_folder_path, prediction_set, obs_df, num_variants):
 
