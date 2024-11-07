@@ -42,7 +42,14 @@ def frequentist_confidence_set(args):
 
     param_short_names = list(inputs_df.columns)
     
-    num_points = sum((obs_df['meanResponse'] != 0) & (~np.isnan(obs_df['meanResponse'])))
+    # get number of points
+    best_dists_varis = pd.read_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv')
+    dists = best_dists_varis['dists']
+    varis = best_dists_varis['varis']
+    test_stat = dists.div(np.power(varis, 0.5))
+    test_stat = test_stat[~np.isnan(test_stat)]
+
+    num_points = len(test_stat)
 
     try:
         conf_lvl = eval_params['confidence_level']
