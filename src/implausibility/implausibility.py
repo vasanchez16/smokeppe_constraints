@@ -93,7 +93,7 @@ def implausibilities(args):
     variants = nc_file['variant'][:].data
     min_variant = min(variants)
     get_this_ind = best_param_set_num - min_variant
-    save_this = pd.DataFrame([nc_file['distances'][:,:,:,get_this_ind].flatten(),nc_file['variances'][:,:,:,get_this_ind].flatten()],index=['dists','varis']).transpose()
+    save_this = pd.DataFrame([nc_file['distances'][...,get_this_ind].flatten(),nc_file['variances'][...,get_this_ind].flatten()],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'mostPlausibleDistsVaris.csv',index=False)
     nc_file.close()
 
@@ -101,7 +101,7 @@ def implausibilities(args):
     variants = nc_file['variant'][:].data
     min_variant = min(variants)
     get_this_ind = mle_variant - min_variant
-    save_this = pd.DataFrame([nc_file['distances'][:,:,:,get_this_ind].flatten(),nc_file['variances'][:,:,:,get_this_ind].flatten()],index=['dists','varis']).transpose()
+    save_this = pd.DataFrame([nc_file['distances'][...,get_this_ind].flatten(),nc_file['variances'][...,get_this_ind].flatten()],index=['dists','varis']).transpose()
     save_this.to_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv',index=False)
     nc_file.close()
 

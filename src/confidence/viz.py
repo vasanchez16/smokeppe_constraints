@@ -286,7 +286,7 @@ def variant_distribution_comp(args, dists, varis):
         test_stat = calc_test_stat_loc(df)
         mins_arr.append(np.nanmin(test_stat))
         maxs_arr.append(np.nanmax(test_stat))
-
+    
     range_min = min(np.nanmin(mle_test_stat), np.nanmin(sim_t))#, min(mins_arr))
     range_max = max(np.nanmax(mle_test_stat), np.nanmax(sim_t))#, max(maxs_arr))
 
