@@ -109,7 +109,7 @@ def mle_t(args, num_variants):
         def execute_calculations():
             with mp.Pool(processes=mp.cpu_count()) as pool:
                 futures = [pool.apply_async(run_opt, args=(variant_adj, variant, nc_file_path, init_vals, bnds)) for variant_adj, variant in zip(variants_adj, variants)]
-                print(len(futures))
+                
                 data_arr = [future.get() for future in futures]
             return data_arr
 

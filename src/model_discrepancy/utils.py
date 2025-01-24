@@ -244,7 +244,7 @@ def calcs_for_nongridded(obs_df, emulator_folder_path, prediction_sets, progress
         # pick subset of observation data and sort
         my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
         my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
-
+        
         # get predictions and prediction uncertainties
         mean_res_arr, sd_res_arr = get_nongridded_data(emulator_folder_path, prediction_set, my_obs_df_this_time, num_variants) # dims: lat, lon, variant
 
