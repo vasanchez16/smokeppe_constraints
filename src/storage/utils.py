@@ -62,6 +62,32 @@ def create_distances_and_variances_base_files(save_here_dir, obs_df, variant_sub
 
     return None
 
+def create_distances_and_variances_base_files_nongridded(save_here_dir, obs_df, variant_subset):
+    """
+    Doc
+    """
+    max_variant = max(variant_subset)
+    with nc.Dataset(save_here_dir + 'dists_varis_data/' + f'distances_variances_{max_variant}.nc', mode="w", format="NETCDF4") as nc_file:
+        # Create dimensions
+        nc_file.createDimension("variant", len(variant_subset))
+        nc_file.createDimension("time", None)  # None for unlimited time dimension
+
+        # Create variables
+        variants = nc_file.createVariable('variant', 'i4', ('variant',))
+        times = nc_file.createVariable('time', 'i4', ('time',))
+        dists = nc_file.createVariable('distances', 'f4', ('time', 'variant'))
+        varis = nc_file.createVariable('variances', 'f4', ('time', 'variant'))
+
+        # Define units for variables
+        dists.units = 'Observation - Emulator' 
+        varis.units = 'Observation variance + Emulator variance'
+        times.units = 'flight number'
+        
+        # Initialize the lat, lon, and variant arrays
+        variants[:] = variant_subset
+
+    return None
+
 def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_one_time, obs_time, index, variant_subsets):
     """
     doc
@@ -80,6 +106,30 @@ def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_o
             # Append the data for this time step
             nc_file.variables["distances"][index, :, :, :] = dists_one_time[:,:,subset]
             nc_file.variables["variances"][index, :, :, :] = varis_one_time[:,:,subset]
+
+
+    return None
+
+def save_distances_and_variances_one_time_nongridded(save_here_dir, dists_one_time, varis_one_time, obs_time, flight_index, variant_subsets):
+    """
+    doc
+    """
+    for subset in variant_subsets:
+        max_variant = max(subset)
+        print(subset)
+
+        with nc.Dataset(save_here_dir + 'dists_varis_data/' +  f'distances_variances_{max_variant}.nc', mode="a") as nc_file:
+            dists_one_time = np.array(dists_one_time)
+            varis_one_time = np.array(varis_one_time)
+            # get list of times equal in length to number of points in dists_one_time
+            num_points = dists_one_time.shape[0]
+            flight_num = [flight_index + 1] * num_points
+            # append flight num to existing data in time variable
+            nc_file.variables["time"][flight_index*num_points:(flight_index*num_points)+num_points] = np.array(flight_num)
+
+            # Append the data for this time step
+            nc_file.variables["distances"][flight_index*num_points:(flight_index*num_points)+num_points, :] = dists_one_time[:,subset]
+            nc_file.variables["variances"][flight_index*num_points:(flight_index*num_points)+num_points, :] = varis_one_time[:,subset]
 
 
     return None

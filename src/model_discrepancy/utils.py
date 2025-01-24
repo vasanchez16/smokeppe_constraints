@@ -3,7 +3,7 @@ import pandas as pd
 import json
 from tqdm import tqdm
 import netCDF4 as nc
-from src.storage.utils import save_distances_and_variances_one_time
+from src.storage.utils import save_distances_and_variances_one_time, save_distances_and_variances_one_time_nongridded
 
 
 def calculate_distances_and_variances(args, num_variants, obs_df, prediction_sets, variant_subsets):
@@ -29,6 +29,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     run_label = eval_params['run_label']
     save_here_dir = args.output_dir + run_label + '/'
     emulator_folder_path = eval_params['emulator_output_folder_path']
+    gridded = eval_params['gridded']
 
     my_obs_df = obs_df.copy()
     idxSet = (obs_df['meanResponse'] == 0) | (np.isnan(obs_df['meanResponse']))
@@ -37,6 +38,14 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
 
     # run this calc method for nc files
+    if gridded == False:
+        print('--------------------------------')
+        print('Running for nongridded data')
+        print('--------------------------------')
+        calcs_for_nongridded(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir, variant_subsets)
+
+        return None
+
     if '.nc' in prediction_sets[0]:
         calcs_for_nc(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, save_here_dir, variant_subsets)
 
@@ -215,5 +224,82 @@ def get_csv_data(emulator_folder_path, prediction_set, obs_df, num_variants):
 
     mean_res_arr = np.reshape(mean_data,(len(obs_df['latitude'].unique()), len(obs_df['longitude'].unique()), num_variants))
     sd_res_arr = np.reshape(sd_data,(len(obs_df['latitude'].unique()), len(obs_df['longitude'].unique()), num_variants))
+
+    return mean_res_arr, sd_res_arr
+
+###########################################################################################
+def calcs_for_nongridded(obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir, variant_subsets):
+    """
+    Function used to calculate the distances and total variances for all emulator variants. Specifically dedicated to nongridded data.
+    """
+    # dimension of spatial coverage
+    lats = obs_df['latitude'].unique()
+    lons = obs_df['longitude'].unique()
+    # TODO: Check times are sorted in same order for observations and predictions
+    obs_times = list(obs_df['time'].unique())
+    obs_times.sort(key=lambda x: int(x.split('flight')[-1]))
+
+    prediction_sets.sort(key=lambda x: int(x.split('flight')[-1].split('.')[0]))
+
+    time_ind = 0
+    for tm, prediction_set in zip(obs_times, prediction_sets):
+        # pick subset of observation data and sort
+        my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
+        my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
+
+        # get predictions and prediction uncertainties
+        mean_res_arr, sd_res_arr = get_nongridded_data(emulator_folder_path, prediction_set, my_obs_df_this_time, num_variants) # dims: lat, lon, variant
+
+        # store data for one lat here
+        dists_arr = []
+        varis_arr = []
+        for obs_pixel in range(len(my_obs_df_this_time)):
+            #get observation data
+            y = my_obs_df_this_time.loc[obs_pixel, 'meanResponse']
+            e = my_obs_df_this_time.loc[obs_pixel, 'sdResponse']**2
+
+            # get emulator data
+            zs = mean_res_arr[obs_pixel,:]
+            ss = sd_res_arr[obs_pixel,:]**2
+
+            if ~np.isnan(y) and y != 0:
+                # find observation - emulator difference
+                distances = list(y - zs)
+                #  find total variance from measurement and emulator
+                variances = list(e + ss)
+            else:
+                # set dist and varis equal to nan if obs is missing or zero
+                distances = [float('nan')]*len(zs)
+                variances = [float('nan')]*len(zs)
+            obs_pixel += 1
+
+            dists_arr.append(distances)
+            varis_arr.append(variances)
+
+        # saves dists and varis for one time output to existing nc file
+        save_distances_and_variances_one_time_nongridded(save_here_dir, dists_arr, varis_arr, tm, time_ind, variant_subsets)
+
+        # update progress bar
+        time_ind += 1
+        progress_bar.update(1)
+    
+    # close progress bar
+    progress_bar.close()
+    return None
+
+def get_nongridded_data(emulator_folder_path, prediction_set, obs_df, num_variants):
+    """
+    Function used to get the nongridded data for the emulator prediction.
+    """
+    prediction_data = pd.read_csv(emulator_folder_path + prediction_set)
+    prediction_data.sort_values(['latitude','longitude','variant'], inplace=True, ignore_index=True)
+
+    mean_data = prediction_data['meanResponse'].values
+    sd_data = prediction_data['sdResponse'].values
+
+    num_points = len(obs_df)
+
+    mean_res_arr = np.reshape(mean_data,(num_points, num_variants))
+    sd_res_arr = np.reshape(sd_data,(num_points, num_variants))
 
     return mean_res_arr, sd_res_arr

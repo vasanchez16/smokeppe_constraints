@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 from .utils import calculate_distances_and_variances
-from src.storage.utils import save_dataset, get_em_pred_filenames, save_distances_and_variances, create_distances_and_variances_base_files, get_variant_subsets
+from src.storage.utils import get_em_pred_filenames, create_distances_and_variances_base_files, create_distances_and_variances_base_files_nongridded, get_variant_subsets
 from .viz import plot_measurements
 
 
@@ -21,6 +21,7 @@ def model_discrepancy(args):
     satellite_file_path = eval_params['satellite_file_path']
     inputs_file_path = eval_params['emulator_inputs_file_path']
     subregion_filter = eval_params['subregion_filter']
+    gridded = eval_params['gridded']
 
     try:
         subset_size = eval_params['subset_size']
@@ -70,7 +71,10 @@ def model_discrepancy(args):
         return None
 
     for subset in variant_subsets:
-        create_distances_and_variances_base_files(save_here_dir, obs_df, subset)
+        if gridded == True:
+            create_distances_and_variances_base_files(save_here_dir, obs_df, subset)
+        else:
+            create_distances_and_variances_base_files_nongridded(save_here_dir, obs_df, subset)
 
     """
     Calculate distances and variances
