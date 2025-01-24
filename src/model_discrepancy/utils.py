@@ -39,9 +39,6 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
     # run this calc method for nc files
     if gridded == False:
-        print('--------------------------------')
-        print('Running for nongridded data')
-        print('--------------------------------')
         calcs_for_nongridded(my_obs_df, emulator_folder_path, prediction_sets, progress_bar, num_variants, save_here_dir, variant_subsets)
 
         return None
@@ -235,7 +232,8 @@ def calcs_for_nongridded(obs_df, emulator_folder_path, prediction_sets, progress
     # dimension of spatial coverage
     lats = obs_df['latitude'].unique()
     lons = obs_df['longitude'].unique()
-    # TODO: Check times are sorted in same order for observations and predictions
+
+    # Ensure obs and preds are sorted in same order
     obs_times = list(obs_df['time'].unique())
     obs_times.sort(key=lambda x: int(x.split('flight')[-1]))
 

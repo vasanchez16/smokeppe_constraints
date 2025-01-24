@@ -116,7 +116,6 @@ def save_distances_and_variances_one_time_nongridded(save_here_dir, dists_one_ti
     """
     for subset in variant_subsets:
         max_variant = max(subset)
-        print(subset)
 
         with nc.Dataset(save_here_dir + 'dists_varis_data/' +  f'distances_variances_{max_variant}.nc', mode="a") as nc_file:
             dists_one_time = np.array(dists_one_time)
