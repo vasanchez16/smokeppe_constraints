@@ -18,8 +18,8 @@ sys.path.append(os.getcwd())
 def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     # Open the NetCDF file within the process
     with nc.Dataset(nc_file_path, 'r') as open_nc_file:
-        dists_here = open_nc_file['distances'][:,:,:,variant_adj].flatten()
-        varis_here = open_nc_file['variances'][:,:,:,variant_adj].flatten()
+        dists_here = open_nc_file['distances'][...,variant_adj].flatten()
+        varis_here = open_nc_file['variances'][...,variant_adj].flatten()
     
     x_0 = init_vals
     if len(init_vals) > 2:
@@ -105,11 +105,11 @@ def mle_t(args, num_variants):
             variants = nc_file['variant'][:].data
         min_variant = min(variants)
         variants_adj = [v - min_variant for v in variants]
-
+        # print(variants_adj)
         def execute_calculations():
             with mp.Pool(processes=mp.cpu_count()) as pool:
                 futures = [pool.apply_async(run_opt, args=(variant_adj, variant, nc_file_path, init_vals, bnds)) for variant_adj, variant in zip(variants_adj, variants)]
-
+                print(len(futures))
                 data_arr = [future.get() for future in futures]
             return data_arr
 
