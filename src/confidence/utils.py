@@ -72,7 +72,7 @@ def get_implaus_thresh_t_boot(args, conf_lvl):
     varis = best_dists_varis['varis']
 
     if 'epsilon' in mle_df.columns:
-        dists = dists + float(mle_df['epsilon'])
+        dists = dists - float(mle_df['epsilon'])
 
     adj_varis = varis + float(mle_df['variance_mle'])
     test_stat = dists.div(np.power(adj_varis, 0.5))

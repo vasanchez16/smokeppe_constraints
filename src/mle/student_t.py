@@ -44,7 +44,7 @@ def minus_log_l(d, dists, varis):
 
     coeff = scipy.special.gamma((nu_opt + 1) / 2) / \
             (scipy.special.gamma(nu_opt / 2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
-    factor2 = 1 + ((dists + epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+    factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
     f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
     log_Li = np.log(f_t)
     log_likelihood = np.nansum(log_Li)
@@ -57,7 +57,7 @@ def minus_log_l_with_epsilon(d, dists, varis):
 
     coeff = scipy.special.gamma((nu_opt + 1) / 2) / \
             (scipy.special.gamma(nu_opt / 2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
-    factor2 = 1 + ((dists + epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+    factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
     f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
     log_Li = np.log(f_t)
     log_likelihood = np.nansum(log_Li)
