@@ -15,7 +15,7 @@ def calculate_implausibility(nc_file_path, stats_dist_method, variance_mle, nu, 
         variants = open_nc_file['variant'][:].data
 
     if epsilon != 0:
-        my_distances = my_distances + epsilon
+        my_distances = my_distances - epsilon
 
     my_variances_adjusted = my_variances + variance_mle
 
