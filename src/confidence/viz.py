@@ -251,7 +251,7 @@ def variant_distribution_comp(args, dists, varis):
         varis = df['varis']
 
         try:
-            dists = dists + epsilon
+            dists = dists - epsilon
         except:
             None
         
