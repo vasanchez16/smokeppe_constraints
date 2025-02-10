@@ -20,6 +20,8 @@ def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     with nc.Dataset(nc_file_path, 'r') as open_nc_file:
         dists_here = open_nc_file['distances'][:,:,:,variant_adj].flatten()
         varis_here = open_nc_file['variances'][:,:,:,variant_adj].flatten()
+    dists_here = dists_here[~np.isnan(dists_here)]
+    varis_here = varis_here[~np.isnan(varis_here)]
     
     x_0 = init_vals
     if len(init_vals) > 2:
@@ -42,8 +44,7 @@ def minus_log_l(d, dists, varis):
     nu_opt = d[1]
     epsilon = 0
 
-    coeff = scipy.special.gamma((nu_opt + 1) / 2) / \
-            (scipy.special.gamma(nu_opt / 2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
+    coeff = (scipy.special.gamma((nu_opt + 1) / 2) / scipy.special.gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
     factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
     f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
     log_Li = np.log(f_t)
@@ -55,8 +56,7 @@ def minus_log_l_with_epsilon(d, dists, varis):
     nu_opt = d[1]
     epsilon = d[2]
 
-    coeff = scipy.special.gamma((nu_opt + 1) / 2) / \
-            (scipy.special.gamma(nu_opt / 2) * np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2)))
+    coeff = (scipy.special.gamma((nu_opt + 1) / 2) / scipy.special.gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
     factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
     f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
     log_Li = np.log(f_t)
