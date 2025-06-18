@@ -25,9 +25,9 @@ def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     
     x_0 = init_vals
     if len(init_vals) > 2:
-        res = minimize(minus_log_l_with_epsilon, x_0, args=(dists_here, varis_here), bounds=[tuple(b) for b in bnds], method='Nelder-Mead')
+        res = minimize(minus_log_l_with_epsilon, x_0, args=(dists_here, varis_here), bounds=[tuple(b) for b in bnds], method='L-BFGS-B')
     else:    
-        res = minimize(minus_log_l, x_0, args=(dists_here, varis_here), bounds=[tuple(b) for b in bnds], method='Nelder-Mead')
+        res = minimize(minus_log_l, x_0, args=(dists_here, varis_here), bounds=[tuple(b) for b in bnds], method='L-BFGS-B')
 
     res_arr = [variant] + [res_var**2 if i == 0 else res_var for i, res_var in enumerate(res.x)]
     res_arr.append(-res.fun)
@@ -107,7 +107,7 @@ def mle_t(args, num_variants):
         variants_adj = [v - min_variant for v in variants]
 
         def execute_calculations():
-            with mp.Pool(processes=mp.cpu_count()) as pool:
+            with mp.Pool(processes=16) as pool:
                 futures = [pool.apply_async(run_opt, args=(variant_adj, variant, nc_file_path, init_vals, bnds)) for variant_adj, variant in zip(variants_adj, variants)]
 
                 data_arr = [future.get() for future in futures]
