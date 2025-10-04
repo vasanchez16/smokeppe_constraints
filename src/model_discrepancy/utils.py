@@ -82,46 +82,25 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
         my_obs_df_this_time = obs_df[obs_df.time==tm].reset_index(drop=True)
         my_obs_df_this_time.sort_values(['latitude','longitude'], inplace=True, ignore_index=True)
 
+        y_arr = my_obs_df_this_time['meanResponse'].values
+        e_arr = my_obs_df_this_time['sdResponse'].values**2
+
+        # set missing values to nan
+        y_arr = np.where(y_arr == 0, np.nan, y_arr)
+
         # get predictions and prediction uncertainties
         mean_res_arr, sd_res_arr = get_nc_data(emulator_folder_path, prediction_set) # dims: lat, lon, variant
 
+        # reshape y and e to lat, lon
+        y_arr = np.reshape(y_arr, mean_res_arr.shape[:-1])
+        e_arr = np.reshape(e_arr, mean_res_arr.shape[:-1])
+
         # calc distances and total variances
-        obs_pixel = 0
-        # store data for one lat here
-        dists_lat_here_arr = []
-        varis_lat_here_arr = []
-        for lat_ind in range(len(lats)):
-            # store data for one lon here
-            dists_lon_here_arr = []
-            varis_lon_here_arr = []
-            for lon_ind in range(len(lons)):
-                #get observation data
-                y = my_obs_df_this_time.loc[obs_pixel, 'meanResponse']
-                e = my_obs_df_this_time.loc[obs_pixel, 'sdResponse']**2
-
-                # get emulator data
-                zs = mean_res_arr[lat_ind,lon_ind,:]
-                ss = sd_res_arr[lat_ind,lon_ind,:]**2
-
-                if ~np.isnan(y) and y != 0:
-                    # find observation - emulator difference
-                    distances = list(y - zs)
-                    #  find total variance from measurement and emulator
-                    variances = list(e + ss)
-                else:
-                    # set dist and varis equal to nan if obs is missing or zero
-                    distances = [float('nan')]*len(zs)
-                    variances = [float('nan')]*len(zs)
-                obs_pixel += 1
-
-                dists_lon_here_arr.append(distances)
-                varis_lon_here_arr.append(variances)
-
-            dists_lat_here_arr.append(dists_lon_here_arr)
-            varis_lat_here_arr.append(varis_lon_here_arr)
+        distances = y_arr[:, :, None] - mean_res_arr
+        variances = e_arr[:, :, None] + sd_res_arr**2
 
         # saves dists and varis for one time output to existing nc file
-        save_distances_and_variances_one_time(save_here_dir, dists_lat_here_arr, varis_lat_here_arr, tm, time_ind, variant_subsets)
+        save_distances_and_variances_one_time(save_here_dir, distances, variances, tm, time_ind, variant_subsets)
 
         # update progress bar
         time_ind += 1
