@@ -53,19 +53,19 @@ def main(args):
     print(f'Run label: {run_label}')
     
     """
-    2. Estimate model discrepancy
+    1. Estimate model discrepancy
     """
     model_discrepancy(args)
     print(runtime(time.time() - start_time))
 
     """
-    3. Compute MLE
+    2. Compute MLE
     """
     mle(args)
     print(runtime(time.time() - start_time))
 
     """
-    4. Compute implausibilities
+    3. Compute implausibilities
     """
     implausibilities(args)
     if stats_dist_method == 'student-t_bootstrap':
@@ -73,7 +73,7 @@ def main(args):
     print(runtime(time.time() - start_time))
 
     """
-    5. Compute confidence sets
+    4. Compute confidence sets
     """
     frequentist_confidence_set(args)
     print(runtime(time.time() - start_time))
