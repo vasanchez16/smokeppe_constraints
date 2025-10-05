@@ -31,7 +31,7 @@ def mle(args):
     if stats_dist_method == 'convolution':
         raise NotImplementedError('Laplace approximation by convolution method not implemented')
     elif 'student-t' in stats_dist_method:
-        opt_vals,col_names = mle_t(args, num_variants)
+        opt_vals,col_names = mle_t(args)
     elif 'gaussian' in stats_dist_method:
         opt_vals,col_names = mle_gauss(args, num_variants)
 

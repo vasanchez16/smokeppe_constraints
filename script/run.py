@@ -18,12 +18,19 @@ from src.storage.utils import (runtime,
                                run_checks,
                                save_eval_params_file)
 
-# Config
-config = configparser.ConfigParser()
-config.read('config.ini')
+from mpi4py import MPI
+COMM = MPI.COMM_WORLD
+CRANK = COMM.Get_rank()
+CSIZE = COMM.Get_size()
+CROOT = 0
 
-input_file = config.get('DEFAULT', 'InputFile')
-output_dir = config.get('DEFAULT', 'OutputDir')
+
+# Config
+# config = configparser.ConfigParser()
+# config.read('config.ini')
+
+# input_file = config.get('DEFAULT', 'InputFile')
+# output_dir = config.get('DEFAULT', 'OutputDir')
 
 
 def main(args):
@@ -39,49 +46,51 @@ def main(args):
     Returns:
         None
     """
-    start_time = time.time()
+    if CRANK == CROOT:
+        start_time = time.time()
 
-    # Set-up
-    run_checks(args)
-    set_up_directories(args)
-    save_eval_params_file(args)
-    with open(args.input_file,'r') as file:
-        eval_params = json.load(file)
-    stats_dist_method = eval_params['stats_distribution_method']
+        # Set-up
+        run_checks(args)
+        set_up_directories(args)
+        save_eval_params_file(args)
+        with open(args.input_file,'r') as file:
+            eval_params = json.load(file)
+        stats_dist_method = eval_params['stats_distribution_method']
 
-    run_label = eval_params['run_label']
-    print(f'Run label: {run_label}')
-    
-    """
-    1. Estimate model discrepancy
-    """
-    model_discrepancy(args)
-    print(runtime(time.time() - start_time))
-
+        run_label = eval_params['run_label']
+        print(f'Run label: {run_label}')
+        
+        """
+        1. Estimate model discrepancy
+        """
+        model_discrepancy(args)
+        print(runtime(time.time() - start_time))
+        
     """
     2. Compute MLE
     """
     mle(args)
     print(runtime(time.time() - start_time))
 
-    """
-    3. Compute implausibilities
-    """
-    implausibilities(args)
-    if stats_dist_method == 'student-t_bootstrap':
-        variant_distribution_comp(args, None, None)
-    print(runtime(time.time() - start_time))
+    if CRANK == CROOT:
+        """
+        3. Compute implausibilities
+        """
+        implausibilities(args)
+        if stats_dist_method == 'student-t_bootstrap':
+            variant_distribution_comp(args, None, None)
+        print(runtime(time.time() - start_time))
 
-    """
-    4. Compute confidence sets
-    """
-    frequentist_confidence_set(args)
-    print(runtime(time.time() - start_time))
+        """
+        4. Compute confidence sets
+        """
+        frequentist_confidence_set(args)
+        print(runtime(time.time() - start_time))
 
-    """
-    Runtime report
-    """
-    print('job successful')
+        """
+        Runtime report
+        """
+        print('job successful')
     return
 
 
@@ -92,12 +101,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_file",
         type=str,
-        default=input_file
+        # default=input_file
     )
     parser.add_argument(
         "--output_dir",
         type=str,
-        default=output_dir
+        # default=output_dir
     )
     args = parser.parse_args()
     main(args)
