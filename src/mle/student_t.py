@@ -1,10 +1,7 @@
-import pandas as pd
 import numpy as np
 import netCDF4 as nc
-import scipy
-from scipy.special import gamma
-import scipy.stats
-from scipy.optimize import minimize_scalar, minimize
+from math import gamma
+from scipy.optimize import minimize
 import sys
 import os
 import json
@@ -26,27 +23,72 @@ Optimization functions
 """
 
 def minus_log_l(d, dists, varis):
-    sigma_opt = d[0]
-    nu_opt = d[1]
-    epsilon = 0
 
-    coeff = (scipy.special.gamma((nu_opt + 1) / 2) / scipy.special.gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
-    factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
-    f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
-    log_Li = np.log(f_t)
-    log_likelihood = np.nansum(log_Li)
+    try:
+        # decision variables
+        sigma_opt = d[0]
+        nu_opt = d[1]
+
+        # calculate gamma ratio factor
+        coeff = (gamma((nu_opt + 1) / 2) / gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
+
+        # calculate distances factor
+        factor2 = 1 + ((dists)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+
+        # guard against invalid values
+        if np.any(factor2 <= 0) or np.any(~np.isfinite(coeff)):
+            return np.inf
+        
+        # calculate combined quantity
+        f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
+
+        # log likelihood
+        log_Li = np.log(f_t)
+
+        # handle potential numerical issues
+        if np.any(~np.isfinite(log_Li)):
+            return np.inf
+        
+        log_likelihood = np.sum(log_Li)
+
+    except:
+        return np.inf
+    
     return -1 * log_likelihood
 
 def minus_log_l_with_epsilon(d, dists, varis):
-    sigma_opt = d[0]
-    nu_opt = d[1]
-    epsilon = d[2]
+    
+    try:
+        # decision variables
+        sigma_opt = d[0]
+        nu_opt = d[1]
+        epsilon = d[2]
 
-    coeff = (scipy.special.gamma((nu_opt + 1) / 2) / scipy.special.gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
-    factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
-    f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
-    log_Li = np.log(f_t)
-    log_likelihood = np.nansum(log_Li)
+        # calculate gamma ratio factor
+        coeff = (gamma((nu_opt + 1) / 2) / gamma(nu_opt / 2)) / np.sqrt(np.pi * (nu_opt - 2) * (varis + sigma_opt**2))
+
+        # calculate distance factor
+        factor2 = 1 + ((dists - epsilon)**2) / ((varis + sigma_opt**2) * (nu_opt-2))
+
+        # guard against invalid values
+        if np.any(factor2 <= 0) or np.any(~np.isfinite(coeff)):
+            return np.inf
+        
+        # calculate combined quantity
+        f_t = coeff * factor2 ** (-1 * (nu_opt + 1) / 2)
+
+        # log likelihood
+        log_Li = np.log(f_t)
+
+        # handle potential numerical issues
+        if np.any(~np.isfinite(log_Li)):
+            return np.inf
+        
+        log_likelihood = np.sum(log_Li)
+
+    except:
+        return np.inf
+    
     return -1 * log_likelihood
 
 # Moved outside mle_t function
@@ -98,8 +140,6 @@ def worker(files_subset, path_to_data_files, save_here_dir, init_vals, bnds):
     # create results file if it doesn't exist
     rank_file = os.path.join(save_here_dir, f'mle_res_rank{CRANK}.csv')
     cols_here = get_mle_columns(init_vals)
-    if os.path.exists(os.path.join(rank_file)):
-        return None
 
     # create base csv for rank
     if not os.path.exists(rank_file):
@@ -143,9 +183,6 @@ def root(files_subset, path_to_data_files, save_here_dir, init_vals, bnds):
     # create results file if it doesn't exist
     rank_file = os.path.join(save_here_dir, f'mle_res_rank{CRANK}.csv')
     cols_here = get_mle_columns(init_vals)
-    if os.path.exists(os.path.join(rank_file)):
-        print('... Root MLE files already exists')
-        return None
 
     # create base csv for rank
     if not os.path.exists(rank_file):
@@ -219,9 +256,6 @@ def mle_t(args):
     else:
         data_files = None
     files_subset = scatter(data_files)
-    
-    if CRANK == CROOT:
-        print(f'Root processing: {files_subset}')
 
     if CRANK == CROOT:
         root(files_subset, path_to_data_files, save_here_dir, init_vals, bnds)
