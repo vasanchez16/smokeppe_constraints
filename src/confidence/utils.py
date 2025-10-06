@@ -23,7 +23,7 @@ def get_implaus_thresh_t(args, num_points, conf_lvl):
     save_here_dir = args.output_dir + run_label + '/'
 
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
-    nu_opt = float(mle_df['nu'])
+    nu_opt = float(mle_df['nu'].values[0])
 
     sum_this = []
     for i in range(num_points):
@@ -72,9 +72,9 @@ def get_implaus_thresh_t_boot(args, conf_lvl):
     varis = best_dists_varis['varis']
 
     if 'epsilon' in mle_df.columns:
-        dists = dists - float(mle_df['epsilon'])
+        dists = dists - float(mle_df['epsilon'].values[0])
 
-    adj_varis = varis + float(mle_df['variance_mle'])
+    adj_varis = varis + float(mle_df['variance_mle'].values[0])
     test_stat = dists.div(np.power(adj_varis, 0.5))
     test_stat = test_stat[~np.isnan(test_stat)]
 

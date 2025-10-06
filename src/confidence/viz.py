@@ -214,10 +214,10 @@ def variant_distribution_comp(args, dists, varis):
 
     # open mle stats for mle selected variant
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
-    mle_variant = int(mle_df['parameter_set_num'])
+    mle_variant = int(mle_df['parameter_set_num'].values[0])
 
     if 'epsilon' in mle_df.columns:
-        epsilon = float(mle_df['epsilon'])
+        epsilon = float(mle_df['epsilon'].values[0])
 
     # get median performing variant
     implaus.sort_values(['I'], inplace=True)
@@ -255,9 +255,9 @@ def variant_distribution_comp(args, dists, varis):
         except:
             None
         
-        adj_varis = (varis + float(mle_df['variance_mle'])) 
+        adj_varis = (varis + float(mle_df['variance_mle'].values[0])) 
         if 'student-t' in stats_dist_method:
-            adj_varis = adj_varis * ((float(mle_df['nu'])-2)/float(mle_df['nu']))
+            adj_varis = adj_varis * ((float(mle_df['nu'].values[0])-2)/float(mle_df['nu'].values[0]))
 
 
         test_stat = dists.div(np.power(adj_varis,0.5))
@@ -265,7 +265,7 @@ def variant_distribution_comp(args, dists, varis):
         return test_stat
         
     mle_dists_varis = pd.read_csv(save_here_dir + 'maxLikelihoodDistsVaris.csv')
-    dof = float(mle_df['nu'])
+    dof = float(mle_df['nu'].values[0])
     mle_test_stat = calc_test_stat_loc(mle_dists_varis)
 
     size = sum(~np.isnan(mle_test_stat))
