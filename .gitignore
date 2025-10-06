@@ -34,6 +34,7 @@ config.ini
 *.sh
 # slurm output files
 *.out
+*.err
 
 # Workspace file
 .vscode/
