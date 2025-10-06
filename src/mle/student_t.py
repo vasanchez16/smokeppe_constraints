@@ -21,6 +21,10 @@ CROOT = 0
 
 FILE_PROGRESS_TAG = 11
 
+"""
+Optimization functions
+"""
+
 def minus_log_l(d, dists, varis):
     sigma_opt = d[0]
     nu_opt = d[1]
@@ -67,18 +71,21 @@ def run_opt(variant_adj, variant, nc_file_path, init_vals, bnds):
     
     return res_arr
 
+"""
+MPI functions
+"""
 def scatter(all_files):
     if CRANK == CROOT:
         # Split into CSIZE-1 chunks for workers only
-        if len(all_files) < (CSIZE - 1):
+        if len(all_files) < (CSIZE):
             # If fewer files than workers, assign one per worker and pad the rest with empty lists
             split_files = [list(chunk) for chunk in np.array_split(all_files, len(all_files))]
-            split_files.extend([[] for _ in range((CSIZE - 1) - len(split_files))])
+            split_files.extend([[] for _ in range((CSIZE) - len(split_files))])
         else:
-            split_files = [list(chunk) for chunk in np.array_split(all_files, CSIZE - 1)]
+            split_files = [list(chunk) for chunk in np.array_split(all_files, CSIZE)]
 
         # Root gets no work
-        split_files = [ [] ] + split_files
+        split_files = split_files
     else:
         split_files = None
 
@@ -91,6 +98,8 @@ def worker(files_subset, path_to_data_files, save_here_dir, init_vals, bnds):
     # create results file if it doesn't exist
     rank_file = os.path.join(save_here_dir, f'mle_res_rank{CRANK}.csv')
     cols_here = get_mle_columns(init_vals)
+    if os.path.exists(os.path.join(rank_file)):
+        return None
 
     # create base csv for rank
     if not os.path.exists(rank_file):
@@ -109,27 +118,59 @@ def worker(files_subset, path_to_data_files, save_here_dir, init_vals, bnds):
             res = run_opt(variant_ind, variant_raw, nc_file_path, init_vals, bnds)
             mle_arr.append(res)
 
-            # if variant_raw % 100 == 0:
-            #     print(f'Rank {CRANK} processed variant {variant_raw} in file {file}', flush=True)
         mle_arr = sorted(mle_arr, key=lambda x: int(x[0]))
 
         # Save data
         with open(rank_file, 'a') as f:
             f.write('\n'.join([','.join(res) for res in mle_arr]) + '\n')
 
-        # send progress update to root
-        COMM.send(None, dest=CROOT, tag=FILE_PROGRESS_TAG)
-
     return None
 
-def root(num_files):
+def get_num_of_variants(files_subset, path_to_data_files):
+    num_variants = 0
+    for file in files_subset:
+        nc_file_path = os.path.join(path_to_data_files, file)
+        with nc.Dataset(nc_file_path, 'r') as nc_file:
+            variants = nc_file['variant'][:].data
+        num_variants += len(variants)
+    return num_variants
 
-    progress = tqdm(total=num_files, desc="Processing files", unit="file")
-    completed = 0
-    while completed < num_files:
-        COMM.recv(source=MPI.ANY_SOURCE, tag=FILE_PROGRESS_TAG)
-        completed += 1
-        progress.update(1)
+def root(files_subset, path_to_data_files, save_here_dir, init_vals, bnds):
+
+    num_variants = get_num_of_variants(files_subset, path_to_data_files)
+
+    progress = tqdm(total=num_variants, desc="Processing root variants", unit="variant")
+    # create results file if it doesn't exist
+    rank_file = os.path.join(save_here_dir, f'mle_res_rank{CRANK}.csv')
+    cols_here = get_mle_columns(init_vals)
+    if os.path.exists(os.path.join(rank_file)):
+        print('... Root MLE files already exists')
+        return None
+
+    # create base csv for rank
+    if not os.path.exists(rank_file):
+        with open(rank_file, 'w') as f:
+            f.write(','.join(cols_here) + '\n')
+
+    # Each rank processes its subset of files
+    for file in files_subset:
+        # check if file exists
+        nc_file_path = os.path.join(path_to_data_files, file)
+
+        with nc.Dataset(nc_file_path, 'r') as nc_file:
+            variants = nc_file['variant'][:].data
+
+        mle_arr = []
+        for variant_ind, variant_raw in enumerate(variants):
+            res = run_opt(variant_ind, variant_raw, nc_file_path, init_vals, bnds)
+            mle_arr.append(res)
+            progress.update(1)
+
+        mle_arr = sorted(mle_arr, key=lambda x: int(x[0]))
+
+        # Save data
+        with open(rank_file, 'a') as f:
+            f.write('\n'.join([','.join(res) for res in mle_arr]) + '\n')
     progress.close()
 
     return None
@@ -145,6 +186,10 @@ def get_optimal_mle(all_mle_file, cols):
             optimal_vals.append(nc_file[col][np.argmax(log_likelihoods)].data)
     
     return optimal_vals
+
+"""
+MLE with student-t distribution
+"""
 
 def mle_t(args):
     """
@@ -171,23 +216,26 @@ def mle_t(args):
     if CRANK == CROOT:
         data_files = os.listdir(path_to_data_files)
         data_files = sorted(data_files, key=lambda f: int(f.split('_')[-1].split('.')[0]))
-        num_files = len(data_files)
     else:
         data_files = None
     files_subset = scatter(data_files)
+    
+    if CRANK == CROOT:
+        print(f'Root processing: {files_subset}')
 
     if CRANK == CROOT:
-        root(num_files)
+        root(files_subset, path_to_data_files, save_here_dir, init_vals, bnds)
     else:
         worker(files_subset, path_to_data_files, save_here_dir, init_vals, bnds)
     
     # save to nc file
+    COMM.Barrier()
     if CRANK == CROOT:
         save_mle_to_nc(save_here_dir, CSIZE, cols_here)
 
         all_mle_file = os.path.join(save_here_dir, 'all_mle.nc')
         optimal_vals = get_optimal_mle(all_mle_file, cols_here)
     else:
-        return None
+        return (None, None)
 
     return optimal_vals, cols_here

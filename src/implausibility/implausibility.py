@@ -26,17 +26,17 @@ def implausibilities(args):
 
     # Read in necessary statistics
     mle_df = pd.read_csv(save_here_dir + 'mle.csv')
-    mle_variant = int(mle_df['parameter_set_num'])
+    mle_variant = int(mle_df['parameter_set_num'].values[0])
 
     # unpack values
-    additional_variance = float(mle_df['variance_mle'])
+    additional_variance = float(mle_df['variance_mle'].values[0])
     try:
-        epsilon = float(mle_df['epsilon'])
+        epsilon = float(mle_df['epsilon'].values[0])
     except:
         epsilon = 0
 
     if 'student-t' in stats_dist_method:
-        nu = float(mle_df['nu'])
+        nu = float(mle_df['nu'].values[0])
     else:
         nu = 0
 

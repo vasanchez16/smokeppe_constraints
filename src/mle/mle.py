@@ -6,12 +6,19 @@ from .gauss import mle_gauss
 from .student_t import mle_t
 import json
 
+from mpi4py import MPI
+
+COMM = MPI.COMM_WORLD
+CRANK = COMM.Get_rank()
+CSIZE = COMM.Get_size()
+CROOT = 0
 
 def mle(args):
     """
     Collect datasets
     """
-    print('---------MLE---------')
+    if CRANK == CROOT:
+        print('---------MLE---------')
     with open(args.input_file,'r') as file:
         eval_params = json.load(file)
 
@@ -38,8 +45,9 @@ def mle(args):
     """
     Save datasets
     """
-    # Save metrics to dataframe and csv
-    mle_df = pd.DataFrame(opt_vals,index=col_names).transpose()
-    save_dataset(mle_df, save_here_dir + 'mle.csv')
+    if CRANK == CROOT:
+        # Save metrics to dataframe and csv
+        mle_df = pd.DataFrame(opt_vals,index=col_names).transpose()
+        save_dataset(mle_df, save_here_dir + 'mle.csv')
 
     return
