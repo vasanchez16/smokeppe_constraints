@@ -70,9 +70,9 @@ def main(args):
     2. Compute MLE
     """
     mle(args)
-    print(runtime(time.time() - start_time))
 
     if CRANK == CROOT:
+        print(runtime(time.time() - start_time))
         """
         3. Compute implausibilities
         """
