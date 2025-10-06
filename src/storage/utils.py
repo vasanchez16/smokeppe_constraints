@@ -294,21 +294,25 @@ def save_mle_to_nc(save_here_dir, CSIZE, cols_here):
     all_mle_file = os.path.join(save_here_dir, 'all_mle.nc')
     create_mle_base_file(all_mle_file, cols_here)
 
+    offset = 0
     for rank_num in range(CSIZE):
         rank_file = os.path.join(save_here_dir, f'mle_res_rank{rank_num}.csv')
         mle_df = pd.read_csv(rank_file)
         mle_df.sort_values(by='parameter_set_num', inplace=True, ignore_index=True)
+        n_rows = len(mle_df)
 
         with nc.Dataset(all_mle_file, 'a') as nc_file:
-            start_ind = (rank_num)*len(mle_df)
-            end_ind = (rank_num+1)*len(mle_df)
+            
             for col in cols_here:
-                nc_file.variables[col][start_ind:end_ind] = mle_df[col].values
+                nc_file.variables[col][offset:offset+n_rows] = mle_df[col].values
+            nc_file.sync()
                 
         # safely delete the rank CSV after merging
         try:
             os.remove(rank_file)
         except Exception as e:
             print(f"Warning: could not delete {rank_file}: {e}", flush=True)
+
+        offset += n_rows
             
     return None
