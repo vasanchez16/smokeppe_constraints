@@ -22,13 +22,11 @@ def model_discrepancy(args):
     inputs_file_path = eval_params['emulator_inputs_file_path']
     subregion_filter = eval_params['subregion_filter']
 
-    try:
-        subset_size = eval_params['subset_size']
-    except:
-        subset_size = 5000
+    # NOTE - write a check to ensure that eval_params is a dict
+    subset_size = eval_params.get('subset_size', 5000)
 
     # Import input emulator parameter combinations
-    inputs_df = pd.read_csv(inputs_file_path) ###
+    inputs_df = pd.read_csv(inputs_file_path)
     num_variants = inputs_df.shape[0]
 
     # subregion work

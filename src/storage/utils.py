@@ -264,6 +264,7 @@ def get_em_pred_filenames(args):
     emulator_folder_path = eval_params['emulator_output_folder_path']
 
     folder_contents = os.listdir(emulator_folder_path)
+    folder_contents = [f for f in folder_contents if f.endswith('.nc') or f.endswith('.csv')]
     folder_contents.sort()
 
     return folder_contents
