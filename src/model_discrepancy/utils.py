@@ -87,9 +87,6 @@ def calcs_for_nc(obs_df, emulator_folder_path, prediction_sets, progress_bar, sa
         y_arr = my_obs_df_this_time['meanResponse'].values
         e_arr = my_obs_df_this_time['sdResponse'].values**2
 
-        # set missing values to nan
-        y_arr = np.where(y_arr == 0, np.nan, y_arr)
-
         # get predictions and prediction uncertainties
         mean_res_arr, sd_res_arr = get_nc_data(emulator_folder_path, prediction_set) # dims: lat, lon, variant
 
