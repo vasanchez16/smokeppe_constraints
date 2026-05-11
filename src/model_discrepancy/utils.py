@@ -32,8 +32,7 @@ def calculate_distances_and_variances(args, num_variants, obs_df, prediction_set
 
     my_obs_df = obs_df.copy()
     # Obervation data filtering
-    # idxSet = (obs_df['meanResponse'] == 0) | (np.isnan(obs_df['meanResponse']))
-    idxSet = (np.isnan(obs_df['meanResponse']))
+    idxSet = (obs_df['meanResponse'] == 0) | (np.isnan(obs_df['meanResponse']))
     # set missing
     my_obs_df.loc[idxSet, ["meanResponse", "sdResponse"]] = [float("nan"), float("nan")]
     progress_bar = tqdm(total=len(prediction_sets), desc="Progress")
