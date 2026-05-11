@@ -8,39 +8,49 @@ from datetime import datetime
 
 def save_dataset(data, save_path):
     """
+    Save a pandas DataFrame to CSV.
+
     Arguments:
-    data: pandas DataFrame Obj
-    Data to be saved
-    save_path: str
-    Path where this data will be saved
+    - data: pd.DataFrame to save
+    - save_path: str, destination file path
     """
     data.to_csv(save_path, index=False)
-    return
+
 
 def get_variant_subsets(num_variants, subset_size):
+    """
+    Partition variant indices into fixed-size chunks.
+
+    Returns a list of lists, each of length subset_size (the last chunk may be smaller).
+    """
     variants_list = list(range(num_variants))
-
     number_of_subsets = int(np.ceil(num_variants / subset_size))
+    return [variants_list[i * subset_size:(i + 1) * subset_size] for i in range(number_of_subsets)]
 
-    variant_subsets = []
-    for i in range(number_of_subsets):
-        variant_subsets.append(variants_list[i*subset_size:(i+1)*subset_size])
-    
-    return variant_subsets
 
 def create_distances_and_variances_base_files(save_here_dir, obs_df, variant_subset):
     """
-    Doc
+    Create an empty NetCDF file to hold distances and variances for a variant subset.
+
+    Dimensions: (time unlimited, lat, lon, variant).
+    Latitude, longitude, and variant coordinate variables are populated immediately;
+    the time, distances, and variances variables are filled incrementally by
+    save_distances_and_variances_one_time.
+
+    Arguments:
+    - save_here_dir: str, run output directory
+    - obs_df: pd.DataFrame, used to extract unique lat/lon coordinates
+    - variant_subset: list of int, variant indices this file will store
     """
     max_variant = max(variant_subset)
-    with nc.Dataset(save_here_dir + 'dists_varis_data/' + f'distances_variances_{max_variant}.nc', mode="w", format="NETCDF4") as nc_file:
-        # Create dimensions
-        nc_file.createDimension("lat", len(np.unique(obs_df['latitude'])))
-        nc_file.createDimension("lon", len(np.unique(obs_df['longitude'])))
-        nc_file.createDimension("variant", len(variant_subset))
-        nc_file.createDimension("time", None)  # None for unlimited time dimension
+    file_path = save_here_dir + 'dists_varis_data/' + f'distances_variances_{max_variant}.nc'
 
-        # Create variables
+    with nc.Dataset(file_path, mode='w', format='NETCDF4') as nc_file:
+        nc_file.createDimension('lat', len(np.unique(obs_df['latitude'])))
+        nc_file.createDimension('lon', len(np.unique(obs_df['longitude'])))
+        nc_file.createDimension('variant', len(variant_subset))
+        nc_file.createDimension('time', None)  # unlimited
+
         lats = nc_file.createVariable('latitude', 'f4', ('lat',))
         lons = nc_file.createVariable('longitude', 'f4', ('lon',))
         variants = nc_file.createVariable('variant', 'i4', ('variant',))
@@ -48,56 +58,61 @@ def create_distances_and_variances_base_files(save_here_dir, obs_df, variant_sub
         dists = nc_file.createVariable('distances', 'f4', ('time', 'lat', 'lon', 'variant'))
         varis = nc_file.createVariable('variances', 'f4', ('time', 'lat', 'lon', 'variant'))
 
-        # Define units for variables
         lats.units = 'degrees north'
         lons.units = 'degrees east'
-        dists.units = 'Observation - Emulator' 
+        dists.units = 'Observation - Emulator'
         varis.units = 'Observation variance + Emulator variance'
         times.units = 'Hours since 01-01-1900 T00:00:00'
-        
-        # Initialize the lat, lon, and variant arrays
-        lats[:] = np.unique(obs_df['latitude'])  # Fill latitudes
-        lons[:] = np.unique(obs_df['longitude']) # Fill longitudes
+
+        lats[:] = np.unique(obs_df['latitude'])
+        lons[:] = np.unique(obs_df['longitude'])
         variants[:] = variant_subset
 
-    return None
 
 def save_distances_and_variances_one_time(save_here_dir, dists_one_time, varis_one_time, obs_time, index, variant_subsets):
     """
-    doc
+    Append distances and variances for a single time step to each variant-subset NetCDF file.
+
+    Arguments:
+    - save_here_dir: str, run output directory
+    - dists_one_time: array-like of shape (lat, lon, all_variants), distances for this time step
+    - varis_one_time: array-like of shape (lat, lon, all_variants), variances for this time step
+    - obs_time: str, raw timestamp string (e.g. '2005-01-01 00:00:00')
+    - index: int, time axis index to write to
+    - variant_subsets: list of lists, variant index groupings matching the on-disk files
     """
+    dists_one_time = np.array(dists_one_time)
+    varis_one_time = np.array(varis_one_time)
+    adj_time = get_adj_time(obs_time)
+
     for subset in variant_subsets:
         max_variant = max(subset)
+        file_path = save_here_dir + 'dists_varis_data/' + f'distances_variances_{max_variant}.nc'
 
-        with nc.Dataset(save_here_dir + 'dists_varis_data/' +  f'distances_variances_{max_variant}.nc', mode="a") as nc_file:
-            # Append the time value
-            adj_time = get_adj_time(obs_time)
-            nc_file.variables["time"][index:index+1] = np.array([adj_time])
-            
-            dists_one_time = np.array(dists_one_time)
-            varis_one_time = np.array(varis_one_time)
+        with nc.Dataset(file_path, mode='a') as nc_file:
+            nc_file.variables['time'][index:index + 1] = np.array([adj_time])
+            nc_file.variables['distances'][index, :, :, :] = dists_one_time[:, :, subset]
+            nc_file.variables['variances'][index, :, :, :] = varis_one_time[:, :, subset]
 
-            # Append the data for this time step
-            nc_file.variables["distances"][index, :, :, :] = dists_one_time[:,:,subset]
-            nc_file.variables["variances"][index, :, :, :] = varis_one_time[:,:,subset]
-
-
-    return None
 
 def save_distances_and_variances(save_here_dir, distances, variances, obs_df, num_variants):
     """
-    Saves the distances and variances calculations into netCDF files.
+    Save the full distances and variances arrays to a single NetCDF file.
+
+    Arguments:
+    - save_here_dir: str, run output directory
+    - distances: np.ndarray of shape (time, lat, lon, variant)
+    - variances: np.ndarray of shape (time, lat, lon, variant)
+    - obs_df: pd.DataFrame, used to extract coordinate and time arrays
+    - num_variants: int, number of emulator parameter variants
     """
     nc_file = nc.Dataset(save_here_dir + 'distances_variances.nc', 'w', format='NETCDF4')
 
-    # Create dimensions
     nc_file.createDimension('lat', len(obs_df['latitude'].unique()))
     nc_file.createDimension('lon', len(obs_df['longitude'].unique()))
     nc_file.createDimension('variant', num_variants)
     nc_file.createDimension('time', len(np.unique(obs_df['time'])))
 
-
-    # Create variables
     lats = nc_file.createVariable('latitude', 'f4', ('lat',))
     lons = nc_file.createVariable('longitude', 'f4', ('lon',))
     variants = nc_file.createVariable('variant', 'i4', ('variant',))
@@ -105,120 +120,116 @@ def save_distances_and_variances(save_here_dir, distances, variances, obs_df, nu
     dists = nc_file.createVariable('distances', 'f4', ('time', 'lat', 'lon', 'variant'))
     varis = nc_file.createVariable('variances', 'f4', ('time', 'lat', 'lon', 'variant'))
 
-    # Define units for variables
     lats.units = 'degrees north'
     lons.units = 'degrees east'
-    dists.units = 'Observation - Emulator' 
+    dists.units = 'Observation - Emulator'
     varis.units = 'Observation variance + Emulator variance'
     times.units = 'Hours since 01-01-1900 T00:00:00'
 
-    # Write data to the variables
-    lats[:] = obs_df['latitude'].unique()  # Fill latitudes
-    lons[:] = obs_df['longitude'].unique() # Fill longitudes
+    lats[:] = obs_df['latitude'].unique()
+    lons[:] = obs_df['longitude'].unique()
     variants[:] = list(range(num_variants))
+    times[:] = get_times_for_nc(np.unique(obs_df['time']))
 
-    # conv times to format for nc file
-    norm_times = get_times_for_nc(np.unique(obs_df['time']))
-    times[:] = norm_times
-
-    # Store dists and varis data
-    dists[:,:,:,:] = distances
-    varis[:,:,:,:] = variances
-    # Add a global attribute
+    dists[:, :, :, :] = distances
+    varis[:, :, :, :] = variances
     nc_file.description = 'Distances and Variances values for constraint calculations.'
     nc_file.close()
-    return None
+
 
 def get_adj_time(raw_date):
-    basetime = datetime(1900,1,1,0,0,0,0)
+    """Convert a datetime string to hours elapsed since 1900-01-01 00:00:00."""
+    basetime = datetime(1900, 1, 1, 0, 0, 0)
+    adj_time = datetime.strptime(raw_date, '%Y-%m-%d %H:%M:%S') - basetime
+    return adj_time.total_seconds() / 3600
 
-    adj_time = datetime.strptime(raw_date,'%Y-%m-%d %H:%M:%S') - basetime
-
-    adj_time = adj_time.total_seconds() / 3600
-
-    return adj_time
 
 def get_times_for_nc(raw_times):
-    basetime = datetime(1900,1,1,0,0,0,0)
-    time_norm_func = lambda t: datetime.strptime(t,'%Y-%m-%d %H:%M:%S') - basetime
+    """Convert an array of datetime strings to hours since 1900-01-01 00:00:00."""
+    basetime = datetime(1900, 1, 1, 0, 0, 0)
+    return [
+        (datetime.strptime(t, '%Y-%m-%d %H:%M:%S') - basetime).total_seconds() / 3600
+        for t in raw_times
+    ]
 
-    norm_times = []
-    for t in raw_times:
-        time_diff = time_norm_func(t)
-        norm_times.append(time_diff.total_seconds() / 3600)
-    
-    return norm_times
 
 def save_indexed_dataset():
-    """
-    Save distances separately for specific parameter set.
-    Implement later if needed
-    """
+    """Save distances for a specific parameter set. Not yet implemented."""
     raise NotImplementedError
+
 
 def set_up_directories(args):
     """
-    add doc
+    Create the output directory structure for a run.
+
+    Creates the run-label directory and all required subdirectories
+    (implaus_figures, general_figures, general_figures/movie_pngs, dists_varis_data)
+    if they do not already exist.
     """
-    with open(args.input_file,'r') as file:
+    with open(args.input_file, 'r') as file:
         eval_params = json.load(file)
     run_label = eval_params['run_label']
+    base = args.output_dir + run_label
 
-    if not os.path.exists(args.output_dir + run_label):
-        os.mkdir(args.output_dir + run_label)
+    for path in [
+        base,
+        base + '/implaus_figures',
+        base + '/general_figures',
+        base + '/general_figures/movie_pngs',
+        base + '/dists_varis_data',
+    ]:
+        if not os.path.exists(path):
+            os.mkdir(path)
 
-    if not os.path.exists(args.output_dir + run_label + '/implaus_figures'):
-        os.mkdir(args.output_dir + run_label + '/implaus_figures')
-
-    if not os.path.exists(args.output_dir + run_label + '/general_figures'):
-        os.mkdir(args.output_dir + run_label + '/general_figures')
-    
-    if not os.path.exists(args.output_dir + run_label + '/general_figures/movie_pngs'):
-        os.mkdir(args.output_dir + run_label + '/general_figures/movie_pngs')
-
-    if not os.path.exists(args.output_dir + run_label + '/dists_varis_data'):
-        os.mkdir(args.output_dir + run_label +  '/dists_varis_data')
-
-    return
 
 def set_up_directories_combined_implaus(args):
     """
-    add doc
+    Create the output directory structure for a combined-implausibility run.
+
+    In addition to the base and implaus_figures directories, creates a
+    comb_implaus_figures directory and per-run subdirectories under implaus_figures.
     """
-    with open(args.input_file,'r') as file:
+    with open(args.input_file, 'r') as file:
         eval_params = json.load(file)
     run_label = eval_params['run_label']
     run_dirs = eval_params['directories']
+    base = args.output_dir + run_label
 
-    if not os.path.exists(args.output_dir + run_label):
-        os.mkdir(args.output_dir + run_label)
-
-    if not os.path.exists(args.output_dir + run_label + '/comb_implaus_figures'):
-        os.mkdir(args.output_dir + run_label + '/comb_implaus_figures')
-
-    if not os.path.exists(args.output_dir + run_label + '/implaus_figures'):
-        os.mkdir(args.output_dir + run_label + '/implaus_figures')
+    for path in [
+        base,
+        base + '/comb_implaus_figures',
+        base + '/implaus_figures',
+    ]:
+        if not os.path.exists(path):
+            os.mkdir(path)
 
     for dir in run_dirs:
         subfolder = dir.split('/')[-1]
-        if not os.path.exists(args.output_dir + run_label + '/implaus_figures/' + subfolder):
-            os.mkdir(args.output_dir + run_label + '/implaus_figures/' + subfolder)
+        subpath = base + '/implaus_figures/' + subfolder
+        if not os.path.exists(subpath):
+            os.mkdir(subpath)
 
-    return
 
 def save_eval_params_file(args):
-    with open(args.input_file,'r') as file:
+    """Copy the evaluation parameters JSON into the run output directory."""
+    with open(args.input_file, 'r') as file:
         eval_params = json.load(file)
     run_label = eval_params['run_label']
 
-    with open(args.output_dir + run_label + '/evaluationParameters.json','w') as json_file:
+    with open(args.output_dir + run_label + '/evaluationParameters.json', 'w') as json_file:
         json.dump(eval_params, json_file, indent=4)
 
-    return
 
 def run_checks(args):
-    
-    with open(args.input_file,'r') as file:
+    """
+    Validate required evaluation parameters before the pipeline starts.
+
+    Raises ValueError for:
+    - An unrecognised stats_distribution_method
+    - output_dir or emulator_output_folder_path not ending with '/'
+    - confidence_level outside the range (0, 100)
+    """
+    with open(args.input_file, 'r') as file:
         eval_params = json.load(file)
 
     possible_methods = [
@@ -226,72 +237,76 @@ def run_checks(args):
         'student-t',
         'gaussian',
         'student-t_bootstrap',
-        'gaussian_bootstrap'
-                        ]
-    if not (eval_params['stats_distribution_method'] in possible_methods):
-        raise(ValueError('Method must be one of the following: \'convolution\',\'student-t\',\'gaussian\''))
-
-    if (args.output_dir[-1] != '/') and (eval_params['emulator_output_folder_path'][-1] != '/'):
-        raise(ValueError('End OutputDir and emulator_output_folder_path with \'/\' character'))
+        'gaussian_bootstrap',
+    ]
+    if eval_params['stats_distribution_method'] not in possible_methods:
+        raise ValueError("Method must be one of: 'convolution', 'student-t', 'gaussian', "
+                         "'student-t_bootstrap', 'gaussian_bootstrap'")
 
     if args.output_dir[-1] != '/':
-        raise(ValueError('End OutputDir with \'/\' character'))
-    
+        raise ValueError("End output_dir with '/' character")
+
     if eval_params['emulator_output_folder_path'][-1] != '/':
-        raise(ValueError('End emulator_output_folder_path with \'/\' character'))
-    
+        raise ValueError("End emulator_output_folder_path with '/' character")
+
     try:
-        eval_params['confidence_level']
-        if (float(eval_params['confidence_level']) >= 100) or (float(eval_params['confidence_level']) <= 0):
-            raise(ValueError('Confidence level must be a number between 0 and 100'))
-    except:
-        None
-    
-    return
+        conf_lvl = float(eval_params['confidence_level'])
+        if conf_lvl >= 100 or conf_lvl <= 0:
+            raise ValueError('confidence_level must be a number between 0 and 100')
+    except KeyError:
+        pass  # confidence_level is optional; a default is applied downstream
+
 
 def runtime(seconds):
-    hrs = int(seconds / (60*60))
-    minutes = int((seconds % (60*60)) / 60)
+    """Format an elapsed time in seconds as 'X hours Y minutes'."""
+    hrs = int(seconds / (60 * 60))
+    minutes = int((seconds % (60 * 60)) / 60)
     return f'Current Runtime: {hrs} hours {minutes} minutes'
+
 
 def get_em_pred_filenames(args):
     """
-    getting sorted list of the em prediciton filenames
+    Return a sorted list of emulator prediction filenames (.nc or .csv) from the
+    emulator output folder specified in the evaluation parameters file.
     """
-
-    with open(args.input_file,'r') as file:
+    with open(args.input_file, 'r') as file:
         eval_params = json.load(file)
     emulator_folder_path = eval_params['emulator_output_folder_path']
 
     folder_contents = os.listdir(emulator_folder_path)
     folder_contents = [f for f in folder_contents if f.endswith('.nc') or f.endswith('.csv')]
     folder_contents.sort()
-
     return folder_contents
 
+
 def get_mle_columns(init_vals):
+    """
+    Return the MLE result column names based on the number of optimized parameters.
+
+    Two initial values (sigma, nu) → no epsilon column.
+    Three or more (sigma, nu, epsilon) → epsilon column included.
+    """
     if len(init_vals) > 2:
-        cols_here = ['parameter_set_num', 'variance_mle', 'nu', 'epsilon', 'log_L']
-    else:
-        cols_here = ['parameter_set_num', 'variance_mle', 'nu', 'log_L']
-    
-    return cols_here
+        return ['parameter_set_num', 'variance_mle', 'nu', 'epsilon', 'log_L']
+    return ['parameter_set_num', 'variance_mle', 'nu', 'log_L']
+
 
 def create_mle_base_file(all_mle_file, cols_here):
-
-    with nc.Dataset(all_mle_file, mode="w", format="NETCDF4") as nc_file:
-        # Create dimensions
+    """Create an empty NetCDF file with an unlimited parameter_set_num dimension and one variable per column."""
+    with nc.Dataset(all_mle_file, mode='w', format='NETCDF4') as nc_file:
         nc_file.createDimension('parameter_set_num', None)
-
-        # Create variables
         for col in cols_here:
             nc_file.createVariable(col, 'f4', ('parameter_set_num',))
-    
-    return None
+
 
 def save_mle_to_nc(save_here_dir, CSIZE, cols_here):
+    """
+    Merge per-rank MLE CSV files into a single all_mle.nc NetCDF file, then
+    delete the per-rank CSVs.
 
-    # create a base nc file
+    Each rank file is sorted by parameter_set_num before being appended so that
+    the final NetCDF has variants in a consistent order.
+    """
     all_mle_file = os.path.join(save_here_dir, 'all_mle.nc')
     create_mle_base_file(all_mle_file, cols_here)
 
@@ -303,17 +318,13 @@ def save_mle_to_nc(save_here_dir, CSIZE, cols_here):
         n_rows = len(mle_df)
 
         with nc.Dataset(all_mle_file, 'a') as nc_file:
-            
             for col in cols_here:
-                nc_file.variables[col][offset:offset+n_rows] = mle_df[col].values
+                nc_file.variables[col][offset:offset + n_rows] = mle_df[col].values
             nc_file.sync()
-                
-        # safely delete the rank CSV after merging
+
         try:
             os.remove(rank_file)
         except Exception as e:
-            print(f"Warning: could not delete {rank_file}: {e}", flush=True)
+            print(f'Warning: could not delete {rank_file}: {e}', flush=True)
 
         offset += n_rows
-            
-    return None
